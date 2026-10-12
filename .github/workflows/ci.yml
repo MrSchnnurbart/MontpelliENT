@@ -26,8 +26,9 @@ jobs:
       - name: Run Ktor Server Tests
         run: ./gradlew :server:test --no-daemon
 
-      - name: Build Fat JAR
-        run: ./gradlew :server:shadowJar --no-daemon
+      - name: Build Server Distribution
+        run: ./gradlew :server:installDist --no-daemon
+
 
   build-android:
     name: Android App Tests & Release Build
