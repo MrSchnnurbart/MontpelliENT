@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="courses_title">Courses &amp; Assignments</string>
+    <string name="courses_tab_courses">My Courses</string>
+    <string name="courses_tab_assignments">Assignments</string>
+    <string name="courses_empty_courses">No courses found</string>
+    <string name="courses_empty_assignments">No assignments due</string>
+    <string name="status_submitted">Submitted</string>
+    <string name="status_draft">Draft</string>
+    <string name="status_not_submitted">Due</string>
+    <string name="status_graded">Graded</string>
+    <string name="due_date">Due: %s</string>
+</resources>

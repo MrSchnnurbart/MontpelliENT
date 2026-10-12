@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="timetable_title">Timetable</string>
+    <string name="timetable_today">Today</string>
+    <string name="timetable_previous_week">Previous week</string>
+    <string name="timetable_next_week">Next week</string>
+    <string name="timetable_empty">No classes on this day</string>
+    <string name="timetable_empty_weekend">It\'s the weekend, enjoy!</string>
+    <string name="timetable_now">Now</string>
+    <string name="timetable_status_cancelled">Cancelled</string>
+    <string name="timetable_status_modified">Changed</string>
+    <string name="timetable_status_added">New</string>
+    <string name="timetable_type_cm">Lecture</string>
+    <string name="timetable_type_td">Tutorial</string>
+    <string name="timetable_type_tp">Lab</string>
+    <string name="timetable_type_exam">Exam</string>
+    <string name="timetable_type_other">Other</string>
+</resources>

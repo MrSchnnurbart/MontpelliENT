@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="grades_title">Grades &amp; Results</string>
+    <string name="grades_empty">No grades available</string>
+    <string name="grades_credits">%s ECTS</string>
+    <string name="grades_session">Session: %s</string>
+    <string name="grades_new">NEW</string>
+</resources>

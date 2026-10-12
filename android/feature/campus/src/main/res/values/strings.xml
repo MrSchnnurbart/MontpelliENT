@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="campus_title">Vie de Campus &amp; BU</string>
+    <string name="campus_tab_bu">Bibliothèques (BU)</string>
+    <string name="campus_tab_events">Événements Assos</string>
+    <string name="campus_tab_news">Actualités UM</string>
+    <string name="bu_empty">Aucune BU trouvée</string>
+    <string name="events_empty">Aucun événement prévu</string>
+    <string name="news_empty">Aucune actualité disponible</string>
+</resources>

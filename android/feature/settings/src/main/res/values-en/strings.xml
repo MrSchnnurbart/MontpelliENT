@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Settings &amp; Personalization</string>
+    <string name="theme_section">Theme &amp; Display</string>
+    <string name="theme_dark">Dark Mode</string>
+    <string name="theme_amoled">Pure AMOLED Black</string>
+    <string name="theme_dynamic">Dynamic Colors (Material You)</string>
+    <string name="theme_palette">Color Palette</string>
+    <string name="nav_section">Navigation</string>
+    <string name="nav_tabs_desc">Navigation Bar Tabs (max 4)</string>
+    <string name="session_section">Account &amp; Session</string>
+    <string name="session_disconnect">Sign Out (Exit Demo)</string>
+</resources>

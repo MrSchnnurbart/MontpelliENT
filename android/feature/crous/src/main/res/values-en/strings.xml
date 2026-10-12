@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="crous_title">CROUS Dining</string>
+    <string name="crous_empty">No dining spots found</string>
+    <string name="crous_affluence_low">Low wait</string>
+    <string name="crous_affluence_med">Moderate wait</string>
+    <string name="crous_affluence_high">High crowd</string>
+    <string name="crous_affluence_unknown">Crowd unknown</string>
+    <string name="crous_open">Open</string>
+    <string name="crous_closed">Closed</string>
+</resources>

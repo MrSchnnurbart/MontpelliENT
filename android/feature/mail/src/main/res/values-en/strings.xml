@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mail_title">UM Webmail</string>
+    <string name="mail_empty">No messages</string>
+    <string name="mail_unread">%d unread</string>
+</resources>

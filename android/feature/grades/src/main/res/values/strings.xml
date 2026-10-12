@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="grades_title">Notes &amp; Résultats</string>
+    <string name="grades_empty">Aucune note disponible</string>
+    <string name="grades_credits">%s ECTS</string>
+    <string name="grades_session">Session : %s</string>
+    <string name="grades_new">NOUVEAU</string>
+    <string name="grades_simulate">Simulateur &amp; Compensation</string>
+    <string name="grades_simulation_title">Simulation de moyenne</string>
+    <string name="grades_simulated_avg">Moyenne simulée : %s / 20</string>
+    <string name="grades_current_avg">Moyenne actuelle : %s / 20</string>
+    <string name="grades_close">Fermer</string>
+</resources>
+

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_greeting">Hello, %s!</string>
+    <string name="home_card_next_course">Next Class</string>
+    <string name="home_card_assignments">Due Assignments</string>
+    <string name="home_card_grades">Recent Grades</string>
+    <string name="home_card_crous">Favorite CROUS Menu</string>
+    <string name="home_card_mail">New Emails</string>
+    <string name="home_card_events">Campus Life</string>
+    <string name="home_no_courses">No upcoming classes today</string>
+    <string name="home_no_assignments">No urgent assignments</string>
+    <string name="home_see_all">See all</string>
+</resources>

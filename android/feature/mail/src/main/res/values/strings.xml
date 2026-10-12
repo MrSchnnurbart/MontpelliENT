@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mail_title">Messagerie UM</string>
+    <string name="mail_empty">Aucun message</string>
+    <string name="mail_unread">%d non lus</string>
+</resources>

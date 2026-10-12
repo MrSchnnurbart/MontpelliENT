@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MontpelliENT</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_timetable">Timetable</string>
+    <string name="nav_courses">Courses</string>
+    <string name="nav_grades">Grades</string>
+    <string name="nav_mail">Mail</string>
+    <string name="nav_crous">CROUS</string>
+    <string name="nav_campus">Campus</string>
+    <string name="nav_more">More</string>
+    <string name="nav_settings">Settings</string>
+</resources>

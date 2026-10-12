@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="timetable_title">Emploi du temps</string>
+    <string name="timetable_today">Aujourd\'hui</string>
+    <string name="timetable_previous_week">Semaine précédente</string>
+    <string name="timetable_next_week">Semaine suivante</string>
+    <string name="timetable_empty">Aucun cours ce jour-là</string>
+    <string name="timetable_empty_weekend">C\'est le week-end, profitez-en !</string>
+    <string name="timetable_now">En cours</string>
+    <string name="timetable_status_cancelled">Annulé</string>
+    <string name="timetable_status_modified">Modifié</string>
+    <string name="timetable_status_added">Nouveau</string>
+    <string name="timetable_type_cm">CM</string>
+    <string name="timetable_type_td">TD</string>
+    <string name="timetable_type_tp">TP</string>
+    <string name="timetable_type_exam">Examen</string>
+    <string name="timetable_type_other">Autre</string>
+</resources>

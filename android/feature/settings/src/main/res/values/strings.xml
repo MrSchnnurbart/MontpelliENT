@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Paramètres &amp; Personnalisation</string>
+    <string name="theme_section">Thème &amp; Affichage</string>
+    <string name="theme_dark">Mode sombre</string>
+    <string name="theme_amoled">Noir pur AMOLED</string>
+    <string name="theme_dynamic">Couleurs dynamiques (Material You)</string>
+    <string name="theme_palette">Palette de couleurs</string>
+    <string name="theme_custom_color">Couleur libre personnalisée</string>
+    <string name="theme_custom_hex">Code hexadécimal (ex: #00467F, #E65100)</string>
+    <string name="theme_apply">Appliquer</string>
+    <string name="nav_section">Navigation</string>
+    <string name="nav_tabs_desc">Onglets de la barre de navigation (max 4)</string>
+    <string name="session_section">Compte &amp; Session</string>
+    <string name="session_disconnect">Se déconnecter (quitter la démo)</string>
+</resources>
+

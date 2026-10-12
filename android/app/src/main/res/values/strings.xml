@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MontpelliENT</string>
+    <string name="nav_home">Accueil</string>
+    <string name="nav_timetable">Planning</string>
+    <string name="nav_courses">Cours</string>
+    <string name="nav_grades">Notes</string>
+    <string name="nav_mail">Mails</string>
+    <string name="nav_crous">CROUS</string>
+    <string name="nav_campus">Campus</string>
+    <string name="nav_more">Plus</string>
+    <string name="nav_settings">Paramètres</string>
+    <string name="widget_timetable_desc">Affiche le prochain cours de votre emploi du temps ADE Campus</string>
+    <string name="widget_crous_desc">Affiche le menu du jour et l\'affluence de votre RU favori</string>
+</resources>
+

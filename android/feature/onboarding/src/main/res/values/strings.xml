@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_title">MontpelliENT</string>
+    <string name="onboarding_subtitle">Le compagnon étudiant non officiel de l\'Université de Montpellier</string>
+    <string name="onboarding_demo_btn">Essayer en mode Démo</string>
+    <string name="onboarding_cas_btn">Connexion CAS Université</string>
+    <string name="onboarding_disclaimer">Application indépendante et non affiliée à l\'Université de Montpellier. Vos données restent privées sur votre appareil.</string>
+    <string name="login_dialog_title">Connexion CAS UM</string>
+    <string name="login_field_username">Identifiant étudiant (ex: e2024001)</string>
+    <string name="login_field_password">Mot de passe ENT</string>
+    <string name="login_btn_submit">Se connecter</string>
+    <string name="login_btn_cancel">Annuler</string>
+    <string name="login_connecting">Connexion sécurisée en cours…</string>
+    <string name="login_security_note">Vos identifiants sont chiffrés avec Android Keystore (AES-256) sur votre appareil et ne transitent par aucun serveur tiers.</string>
+</resources>

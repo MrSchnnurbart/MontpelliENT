@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_greeting">Bonjour, %s !</string>
+    <string name="home_card_next_course">Prochain cours</string>
+    <string name="home_card_assignments">Devoirs urgents</string>
+    <string name="home_card_grades">Dernières notes</string>
+    <string name="home_card_crous">Menu du CROUS favori</string>
+    <string name="home_card_mail">Nouveaux e-mails</string>
+    <string name="home_card_events">Vie étudiante</string>
+    <string name="home_no_courses">Aucun cours à venir aujourd\'hui</string>
+    <string name="home_no_assignments">Aucun devoir urgent</string>
+    <string name="home_see_all">Voir tout</string>
+    <string name="home_search_placeholder">Rechercher cours, devoirs, mails, salles…</string>
+    <string name="home_search_title">Recherche globale</string>
+    <string name="home_search_no_results">Aucun résultat trouvé</string>
+</resources>
+
