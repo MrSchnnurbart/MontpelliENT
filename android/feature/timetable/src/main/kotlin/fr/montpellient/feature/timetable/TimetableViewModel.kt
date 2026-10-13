@@ -38,4 +38,12 @@ class TimetableViewModel(
             _isRefreshing.value = false
         }
     }
+
+    suspend fun importCustomIcalUrl(url: String): Result<Unit> {
+        _isRefreshing.value = true
+        val res = container.timetable.setCustomIcalUrl(url)
+        _isRefreshing.value = false
+        return res
+    }
 }
+

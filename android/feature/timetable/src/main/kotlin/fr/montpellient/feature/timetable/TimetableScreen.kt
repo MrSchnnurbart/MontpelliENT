@@ -26,9 +26,11 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.EventAvailable
 import androidx.compose.material.icons.outlined.Group
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Today
+
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -86,6 +88,7 @@ fun TimetableRoute(container: AppContainer) {
         eventsByDay = events,
         isRefreshing = refreshing,
         onRefresh = vm::refresh,
+        onImportIcal = vm::importCustomIcalUrl,
     )
 }
 
@@ -98,7 +101,9 @@ fun TimetableScreen(
     eventsByDay: Map<LocalDate, List<TimetableEvent>>,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
+    onImportIcal: suspend (String) -> Result<Unit> = { Result.success(Unit) },
 ) {
+
     val pageCount = ChronoUnit.DAYS.between(windowStart, windowEnd).toInt() + 1
     val todayPage = ChronoUnit.DAYS.between(windowStart, today).toInt()
     val pager = rememberPagerState(initialPage = todayPage) { pageCount }
@@ -111,11 +116,16 @@ fun TimetableScreen(
         scope.launch { pager.animateScrollToPage(page) }
     }
 
+    var showImportDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.timetable_title)) },
                 actions = {
+                    IconButton(onClick = { showImportDialog = true }) {
+                        Icon(Icons.Outlined.Link, contentDescription = "Importer lien ADE")
+                    }
                     IconButton(onClick = { goTo(today) }) {
                         Icon(Icons.Outlined.Today, contentDescription = stringResource(R.string.timetable_today))
                     }
@@ -140,12 +150,116 @@ fun TimetableScreen(
         }
     }
 
+    if (showImportDialog) {
+        AdeImportDialog(
+            onDismiss = { showImportDialog = false },
+            onImport = { url ->
+                onImportIcal(url)
+            }
+        )
+    }
+
     detail?.let { event ->
         ModalBottomSheet(onDismissRequest = { detail = null }) {
             EventDetail(event)
         }
     }
 }
+
+@Composable
+fun AdeImportDialog(
+    onDismiss: () -> Unit,
+    onImport: suspend (String) -> Result<Unit>
+) {
+    var urlInput by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var successMessage by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = { if (!isLoading) onDismiss() },
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Outlined.Link, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(8.dp))
+                Text("Importer mon EDT ADE")
+            }
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    "Collez ici le lien d'export iCal de votre agenda ADE Campus (trouvable sur l'ENT ou ADE > Options > Exporter mon agenda).",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(12.dp))
+                androidx.compose.material3.OutlinedTextField(
+                    value = urlInput,
+                    onValueChange = { urlInput = it },
+                    label = { Text("URL iCal (.ics ou direct_cal.jsp)") },
+                    placeholder = { Text("https://ade.umontpellier.fr/...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading,
+                    singleLine = false,
+                    maxLines = 3
+                )
+                if (errorMessage != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(errorMessage!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+                if (successMessage != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(successMessage!!, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+                }
+                if (isLoading) {
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Téléchargement de l'emploi du temps...", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.Button(
+                onClick = {
+                    if (urlInput.isBlank()) {
+                        errorMessage = "Veuillez renseigner une URL valide."
+                        return@Button
+                    }
+                    isLoading = true
+                    errorMessage = null
+                    scope.launch {
+                        val res = onImport(urlInput.trim())
+                        isLoading = false
+                        if (res.isSuccess) {
+                            successMessage = "Emploi du temps importé avec succès !"
+                            kotlinx.coroutines.delay(1000)
+                            onDismiss()
+                        } else {
+                            errorMessage = res.exceptionOrNull()?.message ?: "Erreur de téléchargement"
+                        }
+                    }
+                },
+                enabled = !isLoading && urlInput.isNotBlank()
+            ) {
+                Text("Importer")
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss, enabled = !isLoading) {
+                Text("Annuler")
+            }
+        }
+    )
+}
+
 
 @Composable
 private fun WeekStrip(

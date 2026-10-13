@@ -215,6 +215,60 @@ fun SettingsRoute(container: AppContainer) {
             }
 
             item {
+                SectionHeader("Emploi du Temps ADE Campus")
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+                ) {
+                    var icalUrl by remember { mutableStateOf("") }
+                    var isSaving by remember { mutableStateOf(false) }
+                    var statusText by remember { mutableStateOf<String?>(null) }
+
+                    LaunchedEffect(Unit) {
+                        icalUrl = container.timetable.getCustomIcalUrl() ?: ""
+                    }
+
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            "Lien d'export iCal de votre agenda ADE (trouvable dans l'ENT ou ADE > Options > Exporter mon agenda).",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        OutlinedTextField(
+                            value = icalUrl,
+                            onValueChange = { icalUrl = it },
+                            label = { Text("URL iCal (.ics ou direct_cal)") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            enabled = !isSaving
+                        )
+                        if (statusText != null) {
+                            Text(statusText!!, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                        }
+                        Button(
+                            onClick = {
+                                if (icalUrl.isNotBlank()) {
+                                    isSaving = true
+                                    statusText = null
+                                    scope.launch {
+                                        val res = container.timetable.setCustomIcalUrl(icalUrl.trim())
+                                        isSaving = false
+                                        statusText = if (res.isSuccess) "Emploi du temps synchronisé avec succès !" else (res.exceptionOrNull()?.message ?: "Erreur")
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            enabled = !isSaving && icalUrl.isNotBlank()
+                        ) {
+                            Text(if (isSaving) "Synchronisation..." else "Enregistrer et synchroniser l'EDT")
+                        }
+                    }
+                }
+            }
+
+            item {
                 SectionHeader(stringResource(R.string.session_section))
                 Button(
                     onClick = {
@@ -232,3 +286,4 @@ fun SettingsRoute(container: AppContainer) {
         }
     }
 }
+

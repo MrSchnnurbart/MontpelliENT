@@ -9,7 +9,7 @@ android {
     defaultConfig {
         applicationId = "fr.montpellient.app"
         versionCode = 1
-        versionName = "0.1.0-j0"
+        versionName = "1.0.0"
     }
 
     androidResources {
@@ -25,9 +25,38 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Permet d'installer directement l'APK release en le signant par défaut avec le keystore local
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 }
+
+tasks.register<Copy>("copyReleaseApk") {
+    dependsOn("assembleRelease")
+    from(layout.buildDirectory.dir("outputs/apk/release")) {
+        include("*.apk")
+        rename { "MontpelliENT-v1.0.0-release.apk" }
+    }
+    into(rootProject.file("dist"))
+}
+
+tasks.register<Copy>("copyDebugApk") {
+    dependsOn("assembleDebug")
+    from(layout.buildDirectory.dir("outputs/apk/debug")) {
+        include("*.apk")
+        rename { "MontpelliENT-v1.0.0-debug.apk" }
+    }
+    into(rootProject.file("dist"))
+}
+
+afterEvaluate {
+    tasks.findByName("assembleRelease")?.finalizedBy("copyReleaseApk")
+    tasks.findByName("assembleDebug")?.finalizedBy("copyDebugApk")
+}
+
+
+
+
 
 dependencies {
     implementation(project(":core:model"))

@@ -38,4 +38,22 @@ class RealTimetableRepository(
             localDataSource.saveEvents(diff.updatedEvents)
         }
     }
+
+    override suspend fun setCustomIcalUrl(url: String): Result<Unit> {
+        val result = adeClient.fetchTimetable(customIcalUrl = url.trim())
+        return if (result is AdeFetchResult.Success) {
+            val previous = runCatching { localDataSource.eventsFlow.first() }.getOrDefault(emptyList())
+            val diff = TimetableDiffEngine.computeDiff(previous, result.events)
+            localDataSource.saveEvents(diff.updatedEvents)
+            Result.success(Unit)
+        } else {
+            val msg = (result as? AdeFetchResult.Error)?.message ?: "Impossible de récupérer l'emploi du temps depuis cette URL"
+            Result.failure(Exception(msg))
+        }
+    }
+
+    override suspend fun getCustomIcalUrl(): String? {
+        return adeClient.getSavedIcalUrl()
+    }
 }
+

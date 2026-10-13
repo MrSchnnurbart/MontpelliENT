@@ -36,3 +36,14 @@
 # Google Tink & ErrorProne annotations
 -dontwarn com.google.errorprone.annotations.**
 
+# AndroidX Room & WorkManager (requis par Glance)
+-keep class androidx.room.** { *; }
+-dontwarn androidx.room.**
+-keep class * extends androidx.room.RoomDatabase
+-dontwarn androidx.work.impl.WorkDatabase
+-keep class androidx.work.impl.WorkDatabase_Impl { *; }
+-keep class androidx.work.impl.** { *; }
+-keep class * extends androidx.work.Worker { *; }
+-keep class * extends androidx.work.ListenableWorker { *; }
+
+

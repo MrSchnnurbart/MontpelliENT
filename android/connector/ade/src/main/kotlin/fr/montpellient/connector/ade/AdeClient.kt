@@ -85,7 +85,12 @@ class AdeClient(
         }
     }
 
+    suspend fun getSavedIcalUrl(): String? = withContext(Dispatchers.IO) {
+        secureStorage.getSecret(STORAGE_KEY_ADE_URL)
+    }
+
     companion object {
         const val STORAGE_KEY_ADE_URL = "ade_export_url"
     }
+
 }

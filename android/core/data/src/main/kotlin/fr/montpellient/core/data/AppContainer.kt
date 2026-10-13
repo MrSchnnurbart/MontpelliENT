@@ -94,8 +94,17 @@ class DefaultAppContainer(context: Context) : AppContainer {
             override suspend fun refresh() {
                 realTimetableRepository.refresh()
             }
+
+            override suspend fun setCustomIcalUrl(url: String): Result<Unit> {
+                return realTimetableRepository.setCustomIcalUrl(url)
+            }
+
+            override suspend fun getCustomIcalUrl(): String? {
+                return realTimetableRepository.getCustomIcalUrl()
+            }
         }
     }
+
     val moodleClient: fr.montpellient.connector.moodle.MoodleClient by lazy {
         fr.montpellient.connector.moodle.MoodleClient(casAuthClient, secureStorage)
     }

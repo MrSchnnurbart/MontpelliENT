@@ -28,6 +28,137 @@ fun OnboardingScreen(
 ) {
     val scope = rememberCoroutineScope()
     var showLoginDialog by remember { mutableStateOf(false) }
+    var isSyncing by remember { mutableStateOf(false) }
+
+    if (isSyncing) {
+        InitialSyncScreen(
+            container = container,
+            onFinished = onEnterApp
+        )
+    } else {
+        Scaffold { padding ->
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    Icons.Outlined.School,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(72.dp)
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                Text(
+                    stringResource(R.string.onboarding_title),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Text(
+                    stringResource(R.string.onboarding_subtitle),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+
+                Spacer(Modifier.height(48.dp))
+
+                Button(
+                    onClick = {
+                        scope.launch {
+                            container.settings.update { it.copy(session = SessionMode.DEMO) }
+                            onEnterApp()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.onboarding_demo_btn))
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                OutlinedButton(
+                    onClick = { showLoginDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Outlined.Lock, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.onboarding_cas_btn))
+                }
+
+                Spacer(Modifier.height(32.dp))
+
+                Text(
+                    stringResource(R.string.onboarding_disclaimer),
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
+        }
+    }
+
+    if (showLoginDialog) {
+        CasLoginDialog(
+            container = container,
+            onDismiss = { showLoginDialog = false },
+            onSuccess = {
+                showLoginDialog = false
+                isSyncing = true
+            }
+        )
+    }
+}
+
+@Composable
+fun InitialSyncScreen(
+    container: AppContainer,
+    onFinished: () -> Unit
+) {
+    var syncStep by remember { mutableStateOf("Connexion aux serveurs UM établie...") }
+    var progress by remember { mutableStateOf(0.15f) }
+    var icalUrlInput by remember { mutableStateOf("") }
+    var needManualIcal by remember { mutableStateOf(false) }
+    var isSavingIcal by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(400)
+        syncStep = "Vérification de la session CAS & Profil..."
+        progress = 0.35f
+        kotlinx.coroutines.delay(600)
+
+        syncStep = "Synchronisation de l'Emploi du temps ADE..."
+        progress = 0.55f
+        val icalSaved = container.timetable.getCustomIcalUrl()
+        if (icalSaved.isNullOrBlank()) {
+            needManualIcal = true
+        } else {
+            runCatching { container.timetable.refresh() }
+        }
+
+        syncStep = "Interrogation de Moodle & Apogée..."
+        progress = 0.85f
+        runCatching { container.courses.refresh() }
+        runCatching { container.grades.refresh() }
+
+        if (icalSaved != null && icalSaved.isNotBlank()) {
+            progress = 1.0f
+            syncStep = "Synchronisation terminée avec succès !"
+            kotlinx.coroutines.delay(800)
+            onFinished()
+        }
+    }
 
     Scaffold { padding ->
         Column(
@@ -39,78 +170,99 @@ fun OnboardingScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                Icons.Outlined.School,
+                Icons.Outlined.Security,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(72.dp)
+                modifier = Modifier.size(64.dp)
             )
 
             Spacer(Modifier.height(16.dp))
 
             Text(
-                stringResource(R.string.onboarding_title),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                "Initialisation de vos données",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
             )
 
+            Spacer(Modifier.height(8.dp))
+
             Text(
-                stringResource(R.string.onboarding_subtitle),
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
+                syncStep,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp)
+                textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(48.dp))
+            Spacer(Modifier.height(24.dp))
 
-            Button(
-                onClick = {
-                    scope.launch {
-                        container.settings.update { it.copy(session = SessionMode.DEMO) }
-                        onEnterApp()
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth().height(8.dp),
+            )
+
+            if (needManualIcal) {
+                Spacer(Modifier.height(32.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
+                ) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            "Emploi du temps ADE Campus",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            "Pour charger vos cours réels, renseignez le lien d'export iCal de votre agenda (trouvable sur l'ENT > ADE > Options > Exporter mon agenda). Vous pourrez aussi le renseigner plus tard.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        OutlinedTextField(
+                            value = icalUrlInput,
+                            onValueChange = { icalUrlInput = it },
+                            label = { Text("URL iCal ADE (.ics ou direct_cal)") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            enabled = !isSavingIcal
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            TextButton(
+                                onClick = onFinished,
+                                modifier = Modifier.weight(1f),
+                                enabled = !isSavingIcal
+                            ) {
+                                Text("Passer")
+                            }
+                            Button(
+                                onClick = {
+                                    if (icalUrlInput.isNotBlank()) {
+                                        isSavingIcal = true
+                                        scope.launch {
+                                            container.timetable.setCustomIcalUrl(icalUrlInput.trim())
+                                            isSavingIcal = false
+                                            onFinished()
+                                        }
+                                    } else {
+                                        onFinished()
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                                enabled = !isSavingIcal
+                            ) {
+                                Text("Valider")
+                            }
+                        }
                     }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(stringResource(R.string.onboarding_demo_btn))
+                }
             }
-
-            Spacer(Modifier.height(12.dp))
-
-            OutlinedButton(
-                onClick = { showLoginDialog = true },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(Icons.Outlined.Lock, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.onboarding_cas_btn))
-            }
-
-            Spacer(Modifier.height(32.dp))
-
-            Text(
-                stringResource(R.string.onboarding_disclaimer),
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.outline
-            )
         }
     }
-
-    if (showLoginDialog) {
-        CasLoginDialog(
-            container = container,
-            onDismiss = { showLoginDialog = false },
-            onSuccess = {
-                showLoginDialog = false
-                onEnterApp()
-            }
-        )
-    }
 }
+
 
 @Composable
 fun CasLoginDialog(
