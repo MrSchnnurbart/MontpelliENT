@@ -42,8 +42,11 @@
 -keep class * extends androidx.room.RoomDatabase
 -dontwarn androidx.work.impl.WorkDatabase
 -keep class androidx.work.impl.WorkDatabase_Impl { *; }
--keep class androidx.work.impl.** { *; }
+-keep class androidx.work.** { *; }
 -keep class * extends androidx.work.Worker { *; }
 -keep class * extends androidx.work.ListenableWorker { *; }
+-keep class * extends androidx.work.InputMerger {
+    <init>();
+}
 
 

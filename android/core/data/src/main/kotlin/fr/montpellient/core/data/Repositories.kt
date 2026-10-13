@@ -60,6 +60,8 @@ interface MailRepository : Refreshable {
     fun messages(folderId: String): Flow<List<MailMessage>>
     fun message(id: String): Flow<MailMessage?>
     suspend fun loadFullBody(id: String): String? = null
+    suspend fun loadMore(): Boolean = false
+    val hasMore: Flow<Boolean> get() = kotlinx.coroutines.flow.flowOf(false)
     suspend fun setRead(id: String, read: Boolean)
     suspend fun setFlagged(id: String, flagged: Boolean)
 }

@@ -70,6 +70,9 @@ fun MailRoute(container: AppContainer) {
                     title = stringResource(R.string.mail_empty)
                 )
             } else {
+                val hasMore by container.mail.hasMore.collectAsStateWithLifecycle(false)
+                var isLoadingMore by remember { mutableStateOf(false) }
+
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
@@ -159,6 +162,34 @@ fun MailRoute(container: AppContainer) {
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.size(16.dp).padding(start = 4.dp)
                                     )
+                                }
+                            }
+                        }
+                    }
+
+                    if (hasMore) {
+                        item(key = "load_more_footer") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 12.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (isLoadingMore) {
+                                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                                } else {
+                                    OutlinedButton(
+                                        onClick = {
+                                            scope.launch {
+                                                isLoadingMore = true
+                                                runCatching { container.mail.loadMore() }
+                                                isLoadingMore = false
+                                            }
+                                        },
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Text("Charger 10 mails plus anciens")
+                                    }
                                 }
                             }
                         }

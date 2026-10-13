@@ -225,6 +225,13 @@ class DefaultAppContainer(context: Context) : AppContainer {
                     if (set.session == fr.montpellient.core.model.SessionMode.DEMO) demo else real
                 }
 
+            override val hasMore: kotlinx.coroutines.flow.Flow<Boolean> =
+                realMailRepository.hasMore
+
+            override suspend fun loadMore(): Boolean {
+                return realMailRepository.loadMore()
+            }
+
             override suspend fun setRead(id: String, read: Boolean) {
                 realMailRepository.setRead(id, read)
             }

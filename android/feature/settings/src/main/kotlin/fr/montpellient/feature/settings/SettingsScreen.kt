@@ -179,14 +179,28 @@ fun SettingsRoute(container: AppContainer) {
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
                 ) {
+                    val isMaxReached = settings.tabs.size >= AppSettings.MAX_TABS
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(stringResource(R.string.nav_tabs_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            stringResource(R.string.nav_tabs_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (isMaxReached) {
+                            Text(
+                                stringResource(R.string.nav_tabs_max_reached),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                         TopLevelDestination.entries.forEach { dest ->
                             val isSelected = dest in settings.tabs
+                            val isEnabled = isSelected || !isMaxReached
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable {
+                                    .clickable(enabled = isEnabled) {
                                         scope.launch {
                                             container.settings.update {
                                                 it.copy(tabs = SettingsRules.toggleTab(it.tabs, dest))
@@ -197,9 +211,13 @@ fun SettingsRoute(container: AppContainer) {
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(dest.name)
+                                Text(
+                                    dest.name,
+                                    color = if (isEnabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                )
                                 Checkbox(
                                     checked = isSelected,
+                                    enabled = isEnabled,
                                     onCheckedChange = {
                                         scope.launch {
                                             container.settings.update {
@@ -270,6 +288,7 @@ fun SettingsRoute(container: AppContainer) {
 
             item {
                 SectionHeader(stringResource(R.string.session_section))
+                val isDemo = settings.session == fr.montpellient.core.model.SessionMode.DEMO
                 Button(
                     onClick = {
                         scope.launch {
@@ -280,7 +299,7 @@ fun SettingsRoute(container: AppContainer) {
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(stringResource(R.string.session_disconnect))
+                    Text(stringResource(if (isDemo) R.string.session_disconnect_demo else R.string.session_disconnect))
                 }
             }
         }

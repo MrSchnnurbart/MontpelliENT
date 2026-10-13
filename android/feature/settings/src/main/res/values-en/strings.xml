@@ -8,6 +8,8 @@
     <string name="theme_palette">Color Palette</string>
     <string name="nav_section">Navigation</string>
     <string name="nav_tabs_desc">Navigation Bar Tabs (max 4)</string>
+    <string name="nav_tabs_max_reached">Maximum number of tabs reached (4/4). Uncheck one to select another.</string>
     <string name="session_section">Account &amp; Session</string>
-    <string name="session_disconnect">Sign Out (Exit Demo)</string>
+    <string name="session_disconnect">Sign Out</string>
+    <string name="session_disconnect_demo">Exit Demo Mode</string>
 </resources>

@@ -11,7 +11,9 @@
     <string name="theme_apply">Appliquer</string>
     <string name="nav_section">Navigation</string>
     <string name="nav_tabs_desc">Onglets de la barre de navigation (max 4)</string>
+    <string name="nav_tabs_max_reached">Nombre maximal d\'onglets atteint (4/4). Décochez-en un pour en choisir un autre.</string>
     <string name="session_section">Compte &amp; Session</string>
-    <string name="session_disconnect">Se déconnecter (quitter la démo)</string>
+    <string name="session_disconnect">Se déconnecter</string>
+    <string name="session_disconnect_demo">Quitter le mode démo</string>
 </resources>
 

@@ -26,6 +26,11 @@ class RealMailRepository(
 ) : MailRepository {
 
     private val _messages = MutableStateFlow<List<MailMessage>>(emptyList())
+    private val _hasMore = MutableStateFlow(false)
+    private var totalServerMessages = 0
+    private var currentFetchedCount = 0
+
+    override val hasMore: Flow<Boolean> = _hasMore.asStateFlow()
 
     override val folders: Flow<List<MailFolder>> = _messages.map { msgs ->
         val unread = msgs.count { !it.isRead }
@@ -72,6 +77,36 @@ class RealMailRepository(
         return existing?.bodyText
     }
 
+    override suspend fun loadMore(): Boolean {
+        val creds = secureStorage.getCredentials() ?: return false
+        if (currentFetchedCount >= totalServerMessages) {
+            _hasMore.value = false
+            return false
+        }
+
+        val result = imapClient.fetchInboxMessages(
+            username = creds.first,
+            password = creds.second,
+            offsetFromEnd = currentFetchedCount,
+            pageSize = 10
+        )
+        return when (result) {
+            is MailResult.Success -> {
+                val newMsgs = result.data.messages
+                totalServerMessages = result.data.totalMessages
+                currentFetchedCount += newMsgs.size
+                _messages.value = (_messages.value + newMsgs).distinctBy { it.id }
+                val canLoadMore = result.data.lowestFetchedSeq > 1
+                _hasMore.value = canLoadMore
+                canLoadMore
+            }
+            is MailResult.Error -> {
+                android.util.Log.e("RealMailRepository", "Erreur loadMore IMAP: ${result.message}")
+                false
+            }
+        }
+    }
+
     override suspend fun refresh() {
         val creds = secureStorage.getCredentials()
         if (creds == null) {
@@ -79,11 +114,20 @@ class RealMailRepository(
             return
         }
         android.util.Log.i("RealMailRepository", "Démarrage récupération IMAP pour ${creds.first}...")
-        val result = imapClient.fetchInboxMessages(creds.first, creds.second)
+        val result = imapClient.fetchInboxMessages(
+            username = creds.first,
+            password = creds.second,
+            offsetFromEnd = 0,
+            pageSize = 10
+        )
         when (result) {
             is MailResult.Success -> {
-                android.util.Log.i("RealMailRepository", "Succès IMAP: ${result.data.size} messages reçus")
-                _messages.value = result.data
+                val msgs = result.data.messages
+                totalServerMessages = result.data.totalMessages
+                currentFetchedCount = msgs.size
+                android.util.Log.i("RealMailRepository", "Succès IMAP: ${msgs.size}/$totalServerMessages messages reçus")
+                _messages.value = msgs
+                _hasMore.value = result.data.lowestFetchedSeq > 1
             }
             is MailResult.Error -> {
                 android.util.Log.e("RealMailRepository", "Erreur IMAP: ${result.message}", result.cause)

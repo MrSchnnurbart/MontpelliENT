@@ -116,24 +116,32 @@ fun CrousRoute(container: AppContainer) {
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    val (affText, affColor, affOnColor) = when (affluence?.level) {
-                                        AffluenceLevel.LOW -> Triple(stringResource(R.string.crous_affluence_low), MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer)
-                                        AffluenceLevel.MEDIUM -> Triple(stringResource(R.string.crous_affluence_med), MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer)
-                                        AffluenceLevel.HIGH -> Triple(stringResource(R.string.crous_affluence_high), MaterialTheme.colorScheme.errorContainer, MaterialTheme.colorScheme.onErrorContainer)
-                                        else -> Triple(stringResource(R.string.crous_affluence_unknown), MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-
-                                    StatusChip(
-                                        text = affText,
-                                        container = affColor,
-                                        content = affOnColor
-                                    )
-
                                     StatusChip(
                                         text = stringResource(if (r.isOpenNow) R.string.crous_open else R.string.crous_closed),
                                         container = if (r.isOpenNow) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant,
                                         content = if (r.isOpenNow) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
+
+                                    if (r.isOpenNow) {
+                                        val (affText, affColor, affOnColor) = when (affluence?.level) {
+                                            AffluenceLevel.LOW -> Triple(stringResource(R.string.crous_affluence_low), MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer)
+                                            AffluenceLevel.MEDIUM -> Triple(stringResource(R.string.crous_affluence_med), MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer)
+                                            AffluenceLevel.HIGH -> Triple(stringResource(R.string.crous_affluence_high), MaterialTheme.colorScheme.errorContainer, MaterialTheme.colorScheme.onErrorContainer)
+                                            else -> Triple(stringResource(R.string.crous_affluence_unknown), MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+
+                                        StatusChip(
+                                            text = affText,
+                                            container = affColor,
+                                            content = affOnColor
+                                        )
+                                    } else {
+                                        StatusChip(
+                                            text = stringResource(R.string.crous_affluence_closed),
+                                            container = MaterialTheme.colorScheme.surfaceVariant,
+                                            content = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                 }
                             }
                         }

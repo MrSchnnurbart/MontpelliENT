@@ -373,10 +373,9 @@ private fun CourseDetailModal(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
-                                            mod.url?.let { fileUrl ->
-                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(fileUrl))
-                                                runCatching { context.startActivity(intent) }
-                                            }
+                                            val targetUrl = mod.url ?: "https://moodle.umontpellier.fr/course/search.php?search=" + Uri.encode(course.shortName.ifBlank { course.fullName })
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl))
+                                            runCatching { context.startActivity(intent) }
                                         },
                                     colors = CardDefaults.cardColors(
                                         containerColor = MaterialTheme.colorScheme.surfaceContainerLow
@@ -400,14 +399,30 @@ private fun CourseDetailModal(
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 fontWeight = FontWeight.Medium
                                             )
-                                            mod.fileSizeBytes?.let { size ->
+                                            Row(
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                mod.fileSizeBytes?.let { size ->
+                                                    Text(
+                                                        text = DateFormats.fileSize(size),
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
                                                 Text(
-                                                    text = DateFormats.fileSize(size),
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    text = if (mod.type == fr.montpellient.core.model.ModuleType.FILE) "Télécharger / Voir le PDF" else "Consulter la ressource",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.primary
                                                 )
                                             }
                                         }
+                                        Icon(
+                                            Icons.Outlined.OpenInNew,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp),
+                                            tint = MaterialTheme.colorScheme.outline
+                                        )
                                     }
                                 }
                             }

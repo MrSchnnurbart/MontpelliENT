@@ -39,11 +39,18 @@ class ImapClient(
 
     private fun nextTag(): String = "A${tagCounter++}"
 
+    data class FetchResult(
+        val messages: List<MailMessage>,
+        val totalMessages: Int,
+        val lowestFetchedSeq: Int
+    )
+
     suspend fun fetchInboxMessages(
         username: String,
         password: String,
-        limit: Int = 20
-    ): MailResult<List<MailMessage>> = withContext(Dispatchers.IO) {
+        offsetFromEnd: Int = 0,
+        pageSize: Int = 10
+    ): MailResult<FetchResult> = withContext(Dispatchers.IO) {
         var socket: SSLSocket? = null
         try {
             val factory = SSLSocketFactory.getDefault() as SSLSocketFactory
@@ -75,10 +82,29 @@ class ImapClient(
                 return@withContext MailResult.Error("Impossible d'ouvrir INBOX: ${selectResp.message}")
             }
 
-            // 4. Récupération du nombre de messages récents
+            // Extraire le nombre total de messages dans la boîte: "* <N> EXISTS"
+            var totalCount = 0
+            for (line in selectResp.lines) {
+                val existsMatch = Regex("\\*\\s+([0-9]+)\\s+EXISTS").find(line)
+                if (existsMatch != null) {
+                    totalCount = existsMatch.groupValues[1].toIntOrNull() ?: 0
+                }
+            }
+
+            if (totalCount == 0) {
+                val logoutTag = nextTag()
+                writer.println("$logoutTag LOGOUT")
+                readUntilTaggedResponse(reader, logoutTag)
+                return@withContext MailResult.Success(FetchResult(emptyList(), 0, 0))
+            }
+
+            // Calculer la plage de séquences (1-indexed) de la fin vers le début
+            val endSeq = (totalCount - offsetFromEnd).coerceAtLeast(1)
+            val startSeq = (endSeq - pageSize + 1).coerceAtLeast(1)
+
+            // 4. Récupération des messages de startSeq à endSeq
             val fetchTag = nextTag()
-            // On demande les messages récents (1:limit ou 1:*)
-            writer.println("$fetchTag FETCH 1:$limit (UID FLAGS ENVELOPE BODY.PEEK[TEXT]<0.200>)")
+            writer.println("$fetchTag FETCH $startSeq:$endSeq (UID FLAGS INTERNALDATE ENVELOPE BODY.PEEK[TEXT]<0.200>)")
             val fetchLines = readUntilTaggedResponse(reader, fetchTag)
 
             val messages = parseFetchResponses(fetchLines.lines)
@@ -88,7 +114,7 @@ class ImapClient(
             writer.println("$logoutTag LOGOUT")
             readUntilTaggedResponse(reader, logoutTag)
 
-            MailResult.Success(messages)
+            MailResult.Success(FetchResult(messages, totalCount, startSeq))
         } catch (e: Exception) {
             MailResult.Error("Erreur lors de la communication IMAP: ${e.message}", e)
         } finally {
@@ -256,11 +282,47 @@ class ImapClient(
         var date = LocalDateTime.now()
         var preview = ""
 
+        fun flushMessage() {
+            if (currentId.isNotBlank()) {
+                messages.add(
+                    MailMessage(
+                        id = currentId,
+                        folderId = "INBOX",
+                        from = MailAddress(name = senderName.ifEmpty { "Université de Montpellier" }, email = senderEmail),
+                        to = listOf(MailAddress(name = null, email = "etudiant@etu.umontpellier.fr")),
+                        subject = subject,
+                        preview = preview.ifEmpty { "Nouveau message universitaire" },
+                        bodyText = preview,
+                        date = date,
+                        isRead = isRead
+                    )
+                )
+                currentId = ""
+                subject = "(Sans objet)"
+                senderName = "Université de Montpellier"
+                senderEmail = "service@umontpellier.fr"
+                preview = ""
+                date = LocalDateTime.now()
+                isRead = false
+            }
+        }
+
         for (line in lines) {
             if (line.startsWith("* ") && line.contains("FETCH")) {
+                flushMessage()
+
                 val uidMatch = Regex("UID\\s+([0-9]+)").find(line)
                 currentId = uidMatch?.groupValues?.get(1) ?: (messages.size + 1).toString()
                 isRead = line.contains("\\Seen")
+
+                // Parser INTERNALDATE en premier comme secours fiable
+                val internalDateMatch = Regex("INTERNALDATE\\s+\"([^\"]+)\"").find(line)
+                if (internalDateMatch != null) {
+                    val parsedInternal = parseImapDate(internalDateMatch.groupValues[1])
+                    if (parsedInternal != null) {
+                        date = parsedInternal
+                    }
+                }
 
                 // Parser l'ENVELOPE IMAP:
                 // Format: ENVELOPE ("date" "subject" ((from-name nil from-mailbox from-host)) ... )
@@ -270,6 +332,14 @@ class ImapClient(
                     val tokens = extractQuotedOrNils(envContent)
                     if (tokens.size >= 2) {
                         // token 0 = date, token 1 = subject
+                        val rawDate = tokens[0]
+                        if (rawDate != "NIL" && rawDate.isNotBlank()) {
+                            val parsedDate = parseImapDate(rawDate)
+                            if (parsedDate != null) {
+                                date = parsedDate
+                            }
+                        }
+
                         val rawSubject = tokens[1]
                         if (rawSubject != "NIL" && rawSubject.isNotBlank()) {
                             subject = decodeMimeWords(rawSubject)
@@ -296,52 +366,18 @@ class ImapClient(
                     }
                 }
             } else if (!line.startsWith("A") && line.isNotBlank()) {
-                val cleanLine = cleanMessagePreview(line)
-                if (cleanLine.isNotBlank() && preview.isBlank()) {
-                    preview = cleanLine.take(140)
+                if (line.trim() == ")") {
+                    flushMessage()
+                } else {
+                    val cleanLine = cleanMessagePreview(line)
+                    if (cleanLine.isNotBlank() && preview.isBlank()) {
+                        preview = cleanLine.take(140)
+                    }
                 }
             }
-
-            // Clôture du message s'il s'agit d'une ligne de fin FETCH ou s'il y a une parenthèse fermante
-            if (currentId.isNotBlank() && (line.trim().endsWith(")") || line.trim() == ")")) {
-                messages.add(
-                    MailMessage(
-                        id = currentId,
-                        folderId = "INBOX",
-                        from = MailAddress(name = senderName.ifEmpty { "Université de Montpellier" }, email = senderEmail),
-                        to = listOf(MailAddress(name = null, email = "etudiant@etu.umontpellier.fr")),
-                        subject = subject,
-                        preview = preview.ifEmpty { "Nouveau message universitaire" },
-                        bodyText = preview,
-                        date = date,
-                        isRead = isRead
-                    )
-                )
-                currentId = ""
-                subject = "(Sans objet)"
-                senderName = "Université de Montpellier"
-                senderEmail = "service@umontpellier.fr"
-                preview = ""
-            }
         }
 
-        // Si le dernier message n'a pas été clôturé par une parenthèse isolée
-        if (currentId.isNotBlank()) {
-            messages.add(
-                MailMessage(
-                    id = currentId,
-                    folderId = "INBOX",
-                    from = MailAddress(name = senderName.ifEmpty { "Université de Montpellier" }, email = senderEmail),
-                    to = listOf(MailAddress(name = null, email = "etudiant@etu.umontpellier.fr")),
-                    subject = subject,
-                    preview = preview.ifEmpty { "Nouveau message universitaire" },
-                    bodyText = preview,
-                    date = date,
-                    isRead = isRead
-                )
-            )
-        }
-
+        flushMessage()
         return messages.reversed()
     }
 
@@ -426,6 +462,41 @@ class ImapClient(
                 match.value
             }
         }
+    }
+
+    private fun parseImapDate(raw: String): LocalDateTime? {
+        val cleaned = raw.replace(Regex("\\s*\\([^)]*\\)$"), "")
+            .replace(Regex("\\s+"), " ")
+            .replace("-", " ")
+            .trim()
+
+        val locales = listOf(Locale.ENGLISH, Locale.FRENCH, Locale.US)
+        val patterns = listOf(
+            "d MMM yyyy HH:mm:ss Z",
+            "EEE, d MMM yyyy HH:mm:ss Z",
+            "d MMMM yyyy HH:mm:ss Z",
+            "EEE, d MMMM yyyy HH:mm:ss Z",
+            "d MMM yyyy HH:mm:ss z",
+            "EEE, d MMM yyyy HH:mm:ss z",
+            "d MMM yyyy HH:mm:ss",
+            "EEE, d MMM yyyy HH:mm:ss"
+        )
+
+        for (loc in locales) {
+            for (pat in patterns) {
+                val parsed = runCatching {
+                    val fmt = DateTimeFormatter.ofPattern(pat, loc)
+                    val zdt = ZonedDateTime.parse(cleaned, fmt)
+                    zdt.withZoneSameInstant(java.time.ZoneId.of("Europe/Paris")).toLocalDateTime()
+                }.getOrNull() ?: runCatching {
+                    val fmt = DateTimeFormatter.ofPattern(pat, loc)
+                    LocalDateTime.parse(cleaned, fmt)
+                }.getOrNull()
+
+                if (parsed != null) return parsed
+            }
+        }
+        return null
     }
 
     companion object {
