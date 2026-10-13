@@ -54,11 +54,40 @@ class RealMailRepository(
         }
     }
 
+    override suspend fun loadFullBody(id: String): String? {
+        val existing = _messages.value.firstOrNull { it.id == id }
+        if (existing != null && existing.bodyText.length > 200 && !existing.bodyText.startsWith("FLAGS")) {
+            return existing.bodyText
+        }
+
+        val creds = secureStorage.getCredentials() ?: return existing?.bodyText
+        val result = imapClient.fetchMessageBody(creds.first, creds.second, id)
+        if (result is MailResult.Success && result.data.isNotBlank()) {
+            val fullBody = result.data
+            _messages.value = _messages.value.map {
+                if (it.id == id) it.copy(bodyText = fullBody) else it
+            }
+            return fullBody
+        }
+        return existing?.bodyText
+    }
+
     override suspend fun refresh() {
-        val creds = secureStorage.getCredentials() ?: return
+        val creds = secureStorage.getCredentials()
+        if (creds == null) {
+            android.util.Log.e("RealMailRepository", "Pas d'identifiants trouvés dans le Keystore pour IMAP")
+            return
+        }
+        android.util.Log.i("RealMailRepository", "Démarrage récupération IMAP pour ${creds.first}...")
         val result = imapClient.fetchInboxMessages(creds.first, creds.second)
-        if (result is MailResult.Success) {
-            _messages.value = result.data
+        when (result) {
+            is MailResult.Success -> {
+                android.util.Log.i("RealMailRepository", "Succès IMAP: ${result.data.size} messages reçus")
+                _messages.value = result.data
+            }
+            is MailResult.Error -> {
+                android.util.Log.e("RealMailRepository", "Erreur IMAP: ${result.message}", result.cause)
+            }
         }
     }
 

@@ -22,7 +22,7 @@ class RealGradesRepository(
 
     override val reports: Flow<List<GradeReport>> = gradesLocalDataSource.reportsFlow
 
-    override val moodleGrades: Flow<List<MoodleGrade>> = flowOf(demoData.moodleGrades)
+    override val moodleGrades: Flow<List<MoodleGrade>> = flowOf(emptyList())
 
     override suspend fun markAllSeen() {
         gradesLocalDataSource.markAllSeen()
@@ -34,13 +34,13 @@ class RealGradesRepository(
             val list = result.getOrNull().orEmpty()
             if (list.isNotEmpty()) {
                 gradesLocalDataSource.saveReports(list)
-            }
-        } else {
-            // Si le cache est vide, initialiser avec les données de démonstration
-            val current = gradesLocalDataSource.reportsFlow.first()
-            if (current.isEmpty()) {
-                gradesLocalDataSource.saveReports(demoData.gradeReports)
+            } else {
+                gradesLocalDataSource.clear()
             }
         }
+    }
+
+    override suspend fun clear() {
+        gradesLocalDataSource.clear()
     }
 }

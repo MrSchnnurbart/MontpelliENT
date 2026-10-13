@@ -104,8 +104,15 @@ class EncryptedGradesStore(context: Context) : GradesLocalDataSource {
     private fun loadFromDisk() {
         if (file.exists()) {
             runCatching {
-                val list: List<GradeReportEntity> = json.decodeFromString(file.readText())
-                _reportsFlow.value = list.map { it.toModel() }
+                val content = file.readText()
+                if (content.isNotBlank()) {
+                    val list: List<GradeReportEntity> = json.decodeFromString(content)
+                    val realOnly = list.filter { it.program != "Licence 3 Informatique" && it.program != "Licence 2 Informatique" }
+                    if (realOnly.size != list.size) {
+                        file.delete()
+                    }
+                    _reportsFlow.value = realOnly.map { it.toModel() }
+                }
             }
         }
     }

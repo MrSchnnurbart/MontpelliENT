@@ -30,6 +30,7 @@ interface Refreshable {
 
 interface ProfileRepository {
     val profile: Flow<StudentProfile?>
+    fun reloadProfile() {}
 }
 
 interface TimetableRepository : Refreshable {
@@ -51,12 +52,14 @@ interface GradesRepository : Refreshable {
     val reports: Flow<List<GradeReport>>
     val moodleGrades: Flow<List<MoodleGrade>>
     suspend fun markAllSeen()
+    suspend fun clear() {}
 }
 
 interface MailRepository : Refreshable {
     val folders: Flow<List<MailFolder>>
     fun messages(folderId: String): Flow<List<MailMessage>>
     fun message(id: String): Flow<MailMessage?>
+    suspend fun loadFullBody(id: String): String? = null
     suspend fun setRead(id: String, read: Boolean)
     suspend fun setFlagged(id: String, flagged: Boolean)
 }

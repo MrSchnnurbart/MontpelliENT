@@ -78,16 +78,38 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
     override val settings: SettingsRepository = DataStoreSettingsRepository(context)
 
-    // Dépôts exposés : profil et EDT s'adaptent selon les identifiants présents ou le mode démo
-    override val profile: ProfileRepository = realProfileRepository
+    override val profile: ProfileRepository by lazy {
+        object : ProfileRepository {
+            override val profile: kotlinx.coroutines.flow.Flow<fr.montpellient.core.model.StudentProfile?> =
+                kotlinx.coroutines.flow.combine(
+                    realProfileRepository.profile,
+                    settings.settings
+                ) { real, set ->
+                    if (set.session == fr.montpellient.core.model.SessionMode.DEMO) {
+                        demo.profile
+                    } else {
+                        real
+                    }
+                }
+
+            override fun reloadProfile() {
+                realProfileRepository.reloadProfile()
+            }
+        }
+    }
     override val timetable: TimetableRepository by lazy {
         object : TimetableRepository {
             override fun events(from: java.time.LocalDate, toInclusive: java.time.LocalDate): kotlinx.coroutines.flow.Flow<List<fr.montpellient.core.model.TimetableEvent>> {
                 return kotlinx.coroutines.flow.combine(
                     realTimetableRepository.events(from, toInclusive),
-                    demoTimetableRepository.events(from, toInclusive)
-                ) { real, demo ->
-                    if (real.isNotEmpty()) real else demo
+                    demoTimetableRepository.events(from, toInclusive),
+                    settings.settings
+                ) { real, demo, set ->
+                    if (set.session == fr.montpellient.core.model.SessionMode.DEMO) {
+                        demo
+                    } else {
+                        real
+                    }
                 }
             }
 
@@ -114,7 +136,7 @@ class DefaultAppContainer(context: Context) : AppContainer {
     }
 
     private val realCoursesRepository by lazy {
-        fr.montpellient.core.data.real.RealCoursesRepository(moodleClient, coursesLocalDataSource)
+        fr.montpellient.core.data.real.RealCoursesRepository(moodleClient, coursesLocalDataSource, timetableLocalDataSource)
     }
 
     private val demoCoursesRepository by lazy {
@@ -126,27 +148,40 @@ class DefaultAppContainer(context: Context) : AppContainer {
             override val courses: kotlinx.coroutines.flow.Flow<List<fr.montpellient.core.model.MoodleCourse>> =
                 kotlinx.coroutines.flow.combine(
                     realCoursesRepository.courses,
-                    demoCoursesRepository.courses
-                ) { real, demo ->
-                    if (real.isNotEmpty()) real else demo
+                    demoCoursesRepository.courses,
+                    settings.settings
+                ) { real, demo, set ->
+                    if (set.session == fr.montpellient.core.model.SessionMode.DEMO) demo else real
                 }
 
             override val assignments: kotlinx.coroutines.flow.Flow<List<fr.montpellient.core.model.Assignment>> =
                 kotlinx.coroutines.flow.combine(
                     realCoursesRepository.assignments,
-                    demoCoursesRepository.assignments
-                ) { real, demo ->
-                    if (real.isNotEmpty()) real else demo
+                    demoCoursesRepository.assignments,
+                    settings.settings
+                ) { real, demo, set ->
+                    if (set.session == fr.montpellient.core.model.SessionMode.DEMO) demo else real
                 }
 
             override val announcements: kotlinx.coroutines.flow.Flow<List<fr.montpellient.core.model.Announcement>> =
-                demoCoursesRepository.announcements
+                kotlinx.coroutines.flow.combine(
+                    demoCoursesRepository.announcements,
+                    settings.settings
+                ) { demo, set ->
+                    if (set.session == fr.montpellient.core.model.SessionMode.DEMO) demo else emptyList()
+                }
 
             override fun course(courseId: Long): kotlinx.coroutines.flow.Flow<fr.montpellient.core.model.MoodleCourse?> =
                 realCoursesRepository.course(courseId)
 
             override fun sections(courseId: Long): kotlinx.coroutines.flow.Flow<List<fr.montpellient.core.model.CourseSection>> =
-                demoCoursesRepository.sections(courseId)
+                kotlinx.coroutines.flow.combine(
+                    realCoursesRepository.sections(courseId),
+                    demoCoursesRepository.sections(courseId),
+                    settings.settings
+                ) { real, demo, set ->
+                    if (set.session == fr.montpellient.core.model.SessionMode.DEMO) demo else real
+                }
 
             override suspend fun refresh() {
                 realCoursesRepository.refresh()
@@ -166,25 +201,28 @@ class DefaultAppContainer(context: Context) : AppContainer {
             override val folders: kotlinx.coroutines.flow.Flow<List<fr.montpellient.core.model.MailFolder>> =
                 kotlinx.coroutines.flow.combine(
                     realMailRepository.folders,
-                    demoMailRepository.folders
-                ) { real, demo ->
-                    if (real.any { it.totalCount > 0 }) real else demo
+                    demoMailRepository.folders,
+                    settings.settings
+                ) { real, demo, set ->
+                    if (set.session == fr.montpellient.core.model.SessionMode.DEMO) demo else real
                 }
 
             override fun messages(folderId: String): kotlinx.coroutines.flow.Flow<List<fr.montpellient.core.model.MailMessage>> =
                 kotlinx.coroutines.flow.combine(
                     realMailRepository.messages(folderId),
-                    demoMailRepository.messages(folderId)
-                ) { real, demo ->
-                    if (real.isNotEmpty()) real else demo
+                    demoMailRepository.messages(folderId),
+                    settings.settings
+                ) { real, demo, set ->
+                    if (set.session == fr.montpellient.core.model.SessionMode.DEMO) demo else real
                 }
 
             override fun message(id: String): kotlinx.coroutines.flow.Flow<fr.montpellient.core.model.MailMessage?> =
                 kotlinx.coroutines.flow.combine(
                     realMailRepository.message(id),
-                    demoMailRepository.message(id)
-                ) { real, demo ->
-                    real ?: demo
+                    demoMailRepository.message(id),
+                    settings.settings
+                ) { real, demo, set ->
+                    if (set.session == fr.montpellient.core.model.SessionMode.DEMO) demo else real
                 }
 
             override suspend fun setRead(id: String, read: Boolean) {
@@ -193,6 +231,10 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
             override suspend fun setFlagged(id: String, flagged: Boolean) {
                 realMailRepository.setFlagged(id, flagged)
+            }
+
+            override suspend fun loadFullBody(id: String): String? {
+                return realMailRepository.loadFullBody(id)
             }
 
             override suspend fun refresh() {
@@ -221,13 +263,19 @@ class DefaultAppContainer(context: Context) : AppContainer {
             override val reports: kotlinx.coroutines.flow.Flow<List<fr.montpellient.core.model.GradeReport>> =
                 kotlinx.coroutines.flow.combine(
                     realGradesRepository.reports,
-                    demoGradesRepository.reports
-                ) { real, demo ->
-                    if (real.isNotEmpty()) real else demo
+                    demoGradesRepository.reports,
+                    settings.settings
+                ) { real, demo, set ->
+                    if (set.session == fr.montpellient.core.model.SessionMode.DEMO) demo else real
                 }
 
             override val moodleGrades: kotlinx.coroutines.flow.Flow<List<fr.montpellient.core.model.MoodleGrade>> =
-                demoGradesRepository.moodleGrades
+                kotlinx.coroutines.flow.combine(
+                    demoGradesRepository.moodleGrades,
+                    settings.settings
+                ) { demo, set ->
+                    if (set.session == fr.montpellient.core.model.SessionMode.DEMO) demo else emptyList()
+                }
 
             override suspend fun markAllSeen() {
                 realGradesRepository.markAllSeen()
@@ -235,6 +283,10 @@ class DefaultAppContainer(context: Context) : AppContainer {
 
             override suspend fun refresh() {
                 realGradesRepository.refresh()
+            }
+
+            override suspend fun clear() {
+                realGradesRepository.clear()
             }
         }
     }

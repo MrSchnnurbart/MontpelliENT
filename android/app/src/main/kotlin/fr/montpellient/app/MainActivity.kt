@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import fr.montpellient.core.data.appContainer
 import fr.montpellient.core.designsystem.theme.MontpelliENTTheme
 import fr.montpellient.core.designsystem.theme.ThemeConfig
@@ -54,13 +55,27 @@ class MainActivity : ComponentActivity() {
 
             MontpelliENTTheme(config = themeConfig) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    if (settings.session == SessionMode.NONE) {
-                        OnboardingScreen(
-                            container = container,
-                            onEnterApp = {}
-                        )
-                    } else {
-                        MainScaffold(container = container, settings = settings)
+                    when {
+                        settings.session == SessionMode.NONE -> {
+                            OnboardingScreen(
+                                container = container,
+                                onEnterApp = {}
+                            )
+                        }
+                        settings.session == SessionMode.AUTHENTICATED && !settings.initialSyncCompleted -> {
+                            val scope = rememberCoroutineScope()
+                            fr.montpellient.feature.onboarding.InitialSyncScreen(
+                                container = container,
+                                onFinished = {
+                                    scope.launch {
+                                        container.settings.update { it.copy(initialSyncCompleted = true) }
+                                    }
+                                }
+                            )
+                        }
+                        else -> {
+                            MainScaffold(container = container, settings = settings)
+                        }
                     }
                 }
             }

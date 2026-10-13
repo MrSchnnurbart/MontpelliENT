@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -33,6 +35,14 @@ fun MailRoute(container: AppContainer) {
     var isRefreshing by remember { mutableStateOf(false) }
     var selectedMail by remember { mutableStateOf<MailMessage?>(null) }
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        if (messages.isEmpty()) {
+            isRefreshing = true
+            runCatching { container.mail.refresh() }
+            isRefreshing = false
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -159,32 +169,72 @@ fun MailRoute(container: AppContainer) {
     }
 
     selectedMail?.let { mail ->
+        var fullBodyText by remember(mail.id) { mutableStateOf(mail.bodyText) }
+        var isLoadingBody by remember(mail.id) { mutableStateOf(false) }
+
+        LaunchedEffect(mail.id) {
+            container.mail.setRead(mail.id, true)
+            if (mail.bodyText.length <= 200 || mail.bodyText == mail.preview) {
+                isLoadingBody = true
+                val fetched = runCatching { container.mail.loadFullBody(mail.id) }.getOrNull()
+                if (!fetched.isNullOrBlank()) {
+                    fullBodyText = fetched
+                }
+                isLoadingBody = false
+            }
+        }
+
         ModalBottomSheet(onDismissRequest = { selectedMail = null }) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp)
-                    .padding(bottom = 32.dp),
+                    .padding(bottom = 40.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(mail.subject, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text(
+                    text = mail.subject,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        "De : ${mail.from.display} <${mail.from.email}>",
+                        text = "De : ${mail.from.display} <${mail.from.email}>",
                         style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
                 Text(
-                    DateFormats.dateTime(mail.date),
+                    text = DateFormats.dateTime(mail.date),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 HorizontalDivider()
+
+                if (isLoadingBody) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                        Spacer(Modifier.width(12.dp))
+                        Text(
+                            "Chargement du message complet...",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
                 Text(
-                    mail.bodyText,
-                    style = MaterialTheme.typography.bodyMedium
+                    text = if (fullBodyText.isNotBlank()) fullBodyText else mail.preview,
+                    style = MaterialTheme.typography.bodyMedium,
+                    lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.3
                 )
+
                 if (mail.attachments.isNotEmpty()) {
                     HorizontalDivider()
                     Text("Pièces jointes :", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)

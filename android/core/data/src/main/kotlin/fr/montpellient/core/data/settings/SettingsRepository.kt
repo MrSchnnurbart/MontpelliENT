@@ -52,6 +52,7 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
         val tabs = stringPreferencesKey("tabs")
         val homeCards = stringPreferencesKey("home_cards")
         val hiddenHomeCards = stringPreferencesKey("hidden_home_cards")
+        val initialSyncCompleted = booleanPreferencesKey("initial_sync_completed")
     }
 
     private fun Preferences.toSettings(): AppSettings {
@@ -69,6 +70,7 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
             homeCards = SettingsCodec.decodeCards(this[Keys.homeCards]) ?: defaults.homeCards,
             hiddenHomeCards = SettingsCodec.decodeCards(this[Keys.hiddenHomeCards])?.toSet()
                 ?: defaults.hiddenHomeCards,
+            initialSyncCompleted = this[Keys.initialSyncCompleted] ?: defaults.initialSyncCompleted,
         )
     }
 
@@ -84,6 +86,7 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
         this[Keys.tabs] = SettingsCodec.encode(s.tabs)
         this[Keys.homeCards] = SettingsCodec.encode(s.homeCards)
         this[Keys.hiddenHomeCards] = SettingsCodec.encode(s.hiddenHomeCards.toList())
+        this[Keys.initialSyncCompleted] = s.initialSyncCompleted
     }
 }
 
@@ -136,7 +139,10 @@ object SettingsRules {
         contrast = ContrastLevel.STANDARD,
     )
 
-    fun signOut(s: AppSettings): AppSettings = s.copy(session = SessionMode.NONE)
+    fun signOut(s: AppSettings): AppSettings = s.copy(
+        session = SessionMode.NONE,
+        initialSyncCompleted = false
+    )
 
     fun languageOrSystem(tag: String?): AppLanguage =
         AppLanguage.entries.firstOrNull { it.tag == tag && it != AppLanguage.SYSTEM } ?: AppLanguage.SYSTEM

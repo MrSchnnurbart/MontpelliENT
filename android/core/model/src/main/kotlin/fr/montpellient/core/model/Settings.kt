@@ -46,6 +46,7 @@ data class AppSettings(
     val tabs: List<TopLevelDestination> = DEFAULT_TABS,
     val homeCards: List<HomeCard> = HomeCard.entries.toList(),
     val hiddenHomeCards: Set<HomeCard> = emptySet(),
+    val initialSyncCompleted: Boolean = false,
 ) {
     val seedColor: Long get() = if (palette == ThemePalette.CUSTOM) customSeedColor else palette.seed
 

@@ -289,28 +289,48 @@ private fun WeekStrip(
                 val day = monday.plusDays(i.toLong())
                 val isSelected = day == selected
                 val isToday = day == today
+
+                val pillBackground = when {
+                    isSelected -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.surface
+                }
+                val labelColor = when {
+                    isSelected -> MaterialTheme.colorScheme.onPrimary
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                }
+                val numberColor = when {
+                    isSelected -> MaterialTheme.colorScheme.onPrimary
+                    isToday -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.onSurface
+                }
+                val dotColor = when {
+                    !hasEvents(day) -> MaterialTheme.colorScheme.surface.copy(alpha = 0f)
+                    isSelected -> MaterialTheme.colorScheme.onPrimary
+                    else -> MaterialTheme.colorScheme.primary
+                }
+
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface)
+                        .background(pillBackground)
                         .clickable { onSelect(day) }
                         .padding(vertical = 6.dp),
                 ) {
-                    Text(DateFormats.dayName(day), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(DateFormats.dayName(day), style = MaterialTheme.typography.labelMedium, color = labelColor)
                     Text(
                         DateFormats.dayNumber(day),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        fontWeight = if (isToday || isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = numberColor,
                     )
                     Box(
                         Modifier
                             .padding(top = 2.dp)
                             .size(5.dp)
                             .clip(CircleShape)
-                            .background(if (hasEvents(day)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface.copy(alpha = 0f)),
+                            .background(dotColor),
                     )
                 }
             }

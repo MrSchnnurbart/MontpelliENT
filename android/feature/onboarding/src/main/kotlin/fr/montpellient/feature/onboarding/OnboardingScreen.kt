@@ -136,6 +136,7 @@ fun InitialSyncScreen(
         kotlinx.coroutines.delay(400)
         syncStep = "Vérification de la session CAS & Profil..."
         progress = 0.35f
+        container.profile.reloadProfile()
         kotlinx.coroutines.delay(600)
 
         syncStep = "Synchronisation de l'Emploi du temps ADE..."

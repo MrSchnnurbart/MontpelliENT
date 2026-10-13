@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -87,11 +88,75 @@ data class AssignmentEntity(
     }
 }
 
+@Serializable
+data class CourseModuleEntity(
+    val id: Long,
+    val name: String,
+    val type: String,
+    val description: String? = null,
+    val fileName: String? = null,
+    val fileSizeBytes: Long? = null,
+    val url: String? = null,
+    val isDownloaded: Boolean = false
+) {
+    fun toModel(): CourseModule = CourseModule(
+        id = id,
+        name = name,
+        type = runCatching { ModuleType.valueOf(type) }.getOrDefault(ModuleType.OTHER),
+        description = description,
+        fileName = fileName,
+        fileSizeBytes = fileSizeBytes,
+        url = url,
+        isDownloaded = isDownloaded
+    )
+
+    companion object {
+        fun fromModel(mod: CourseModule): CourseModuleEntity = CourseModuleEntity(
+            id = mod.id,
+            name = mod.name,
+            type = mod.type.name,
+            description = mod.description,
+            fileName = mod.fileName,
+            fileSizeBytes = mod.fileSizeBytes,
+            url = mod.url,
+            isDownloaded = mod.isDownloaded
+        )
+    }
+}
+
+@Serializable
+data class CourseSectionEntity(
+    val id: Long,
+    val courseId: Long,
+    val name: String,
+    val summary: String? = null,
+    val modules: List<CourseModuleEntity> = emptyList()
+) {
+    fun toModel(): CourseSection = CourseSection(
+        id = id,
+        name = name,
+        summary = summary,
+        modules = modules.map { it.toModel() }
+    )
+
+    companion object {
+        fun fromModel(sec: CourseSection, courseId: Long): CourseSectionEntity = CourseSectionEntity(
+            id = sec.id,
+            courseId = courseId,
+            name = sec.name,
+            summary = sec.summary,
+            modules = sec.modules.map { CourseModuleEntity.fromModel(it) }
+        )
+    }
+}
+
 interface CoursesLocalDataSource {
     val coursesFlow: Flow<List<MoodleCourse>>
     val assignmentsFlow: Flow<List<Assignment>>
+    fun sectionsFlow(courseId: Long): Flow<List<CourseSection>>
     suspend fun saveCourses(courses: List<MoodleCourse>)
     suspend fun saveAssignments(assignments: List<Assignment>)
+    suspend fun saveSections(courseId: Long, sections: List<CourseSection>)
     suspend fun clear()
 }
 
@@ -101,6 +166,7 @@ class EncryptedCoursesStore(
 
     private val coursesFile = File(context.filesDir, "courses_offline_cache.json")
     private val assignmentsFile = File(context.filesDir, "assignments_offline_cache.json")
+    private val sectionsFile = File(context.filesDir, "sections_offline_cache.json")
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = false }
 
     private val _coursesFlow = MutableStateFlow<List<MoodleCourse>>(emptyList())
@@ -108,6 +174,11 @@ class EncryptedCoursesStore(
 
     private val _assignmentsFlow = MutableStateFlow<List<Assignment>>(emptyList())
     override val assignmentsFlow: Flow<List<Assignment>> = _assignmentsFlow.asStateFlow()
+
+    private val _sectionsState = MutableStateFlow<Map<Long, List<CourseSection>>>(emptyMap())
+
+    override fun sectionsFlow(courseId: Long): Flow<List<CourseSection>> =
+        _sectionsState.map { it[courseId].orEmpty() }
 
     init {
         loadFromDisk()
@@ -126,6 +197,13 @@ class EncryptedCoursesStore(
                 _assignmentsFlow.value = list.map { it.toModel() }
             }
         }
+        if (sectionsFile.exists()) {
+            runCatching {
+                val list: List<CourseSectionEntity> = json.decodeFromString(sectionsFile.readText())
+                val grouped = list.groupBy { it.courseId }.mapValues { (_, secList) -> secList.map { it.toModel() } }
+                _sectionsState.value = grouped
+            }
+        }
     }
 
     override suspend fun saveCourses(courses: List<MoodleCourse>) = withContext(Dispatchers.IO) {
@@ -140,10 +218,23 @@ class EncryptedCoursesStore(
         _assignmentsFlow.value = assignments
     }
 
+    override suspend fun saveSections(courseId: Long, sections: List<CourseSection>) = withContext(Dispatchers.IO) {
+        val updated = _sectionsState.value.toMutableMap()
+        updated[courseId] = sections
+        _sectionsState.value = updated
+
+        val allEntities = updated.flatMap { (cid, secs) ->
+            secs.map { CourseSectionEntity.fromModel(it, cid) }
+        }
+        sectionsFile.writeText(json.encodeToString(allEntities))
+    }
+
     override suspend fun clear() = withContext(Dispatchers.IO) {
         coursesFile.delete()
         assignmentsFile.delete()
+        sectionsFile.delete()
         _coursesFlow.value = emptyList()
         _assignmentsFlow.value = emptyList()
+        _sectionsState.value = emptyMap()
     }
 }

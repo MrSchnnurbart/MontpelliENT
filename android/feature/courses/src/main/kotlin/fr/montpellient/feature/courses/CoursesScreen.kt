@@ -1,5 +1,7 @@
 package fr.montpellient.feature.courses
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,12 +10,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,6 +42,8 @@ fun CoursesRoute(container: AppContainer) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var isRefreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    var selectedCourse by remember { mutableStateOf<MoodleCourse?>(null) }
 
     Scaffold(
         topBar = {
@@ -73,17 +81,31 @@ fun CoursesRoute(container: AppContainer) {
                 }
             ) {
                 if (selectedTab == 0) {
-                    CoursesList(courses = courses)
+                    CoursesList(
+                        courses = courses,
+                        onCourseClick = { selectedCourse = it }
+                    )
                 } else {
                     AssignmentsList(assignments = assignments)
                 }
             }
         }
     }
+
+    selectedCourse?.let { course ->
+        CourseDetailModal(
+            course = course,
+            container = container,
+            onDismiss = { selectedCourse = null }
+        )
+    }
 }
 
 @Composable
-private fun CoursesList(courses: List<MoodleCourse>) {
+private fun CoursesList(
+    courses: List<MoodleCourse>,
+    onCourseClick: (MoodleCourse) -> Unit
+) {
     if (courses.isEmpty()) {
         EmptyState(
             icon = Icons.Outlined.School,
@@ -99,7 +121,9 @@ private fun CoursesList(courses: List<MoodleCourse>) {
     ) {
         items(courses, key = { it.id }) { course ->
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onCourseClick(course) },
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow
@@ -240,5 +264,157 @@ private fun SubmissionBadge(status: SubmissionStatus) {
             cs.secondaryContainer,
             cs.onSecondaryContainer
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CourseDetailModal(
+    course: MoodleCourse,
+    container: AppContainer,
+    onDismiss: () -> Unit
+) {
+    val sections by container.courses.sections(course.id).collectAsStateWithLifecycle(emptyList())
+    val context = LocalContext.current
+
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 36.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = course.fullName,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    course.category?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            // Bouton pour ouvrir directement l'espace Moodle dans le navigateur
+            OutlinedButton(
+                onClick = {
+                    val moodleSearchQuery = Uri.encode(course.shortName.ifBlank { course.fullName })
+                    val moodleUrl = "https://moodle.umontpellier.fr/course/search.php?search=$moodleSearchQuery"
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(moodleUrl))
+                    context.startActivity(intent)
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Outlined.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Ouvrir dans Moodle UM")
+            }
+
+            HorizontalDivider()
+
+            Text(
+                text = "Ressources & Documents du cours",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            if (sections.isEmpty() || sections.all { it.modules.isEmpty() }) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            "Aucun document téléchargé hors-ligne pour cette UE.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            "Accédez à l'espace officiel Moodle via le bouton ci-dessus pour consulter tous les supports de cours, polycopiés et PDF en ligne.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 380.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    sections.forEach { section ->
+                        if (section.modules.isNotEmpty()) {
+                            item(key = "sec_${section.id}") {
+                                Text(
+                                    text = section.name,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(top = 8.dp)
+                                )
+                            }
+                            items(section.modules, key = { it.id }) { mod ->
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            mod.url?.let { fileUrl ->
+                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(fileUrl))
+                                                runCatching { context.startActivity(intent) }
+                                            }
+                                        },
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                                    )
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            if (mod.type == fr.montpellient.core.model.ModuleType.FILE) Icons.Outlined.Description
+                                            else Icons.Outlined.Link,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                        Spacer(Modifier.width(12.dp))
+                                        Column(Modifier.weight(1f)) {
+                                            Text(
+                                                text = mod.fileName ?: mod.name,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                            mod.fileSizeBytes?.let { size ->
+                                                Text(
+                                                    text = DateFormats.fileSize(size),
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
