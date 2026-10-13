@@ -55,5 +55,9 @@ class RealTimetableRepository(
     override suspend fun getCustomIcalUrl(): String? {
         return adeClient.getSavedIcalUrl()
     }
+
+    override suspend fun markDaySeen(date: LocalDate) {
+        localDataSource.markDaySeen(date)
+    }
 }
 

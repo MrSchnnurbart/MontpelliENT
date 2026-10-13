@@ -5,3 +5,8 @@ plugins {
 android {
     namespace = "fr.montpellient.feature.settings"
 }
+
+dependencies {
+    implementation(libs.androidx.activity.compose)
+}
+

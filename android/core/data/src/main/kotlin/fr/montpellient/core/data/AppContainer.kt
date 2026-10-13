@@ -124,6 +124,10 @@ class DefaultAppContainer(context: Context) : AppContainer {
             override suspend fun getCustomIcalUrl(): String? {
                 return realTimetableRepository.getCustomIcalUrl()
             }
+
+            override suspend fun markDaySeen(date: java.time.LocalDate) {
+                realTimetableRepository.markDaySeen(date)
+            }
         }
     }
 

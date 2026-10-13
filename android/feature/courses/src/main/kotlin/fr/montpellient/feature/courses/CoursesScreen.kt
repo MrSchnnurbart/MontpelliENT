@@ -339,12 +339,12 @@ private fun CourseDetailModal(
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            "Aucun document téléchargé hors-ligne pour cette UE.",
+                            "Aucun fichier disponible pour ce cours",
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Bold
                         )
                         Text(
-                            "Accédez à l'espace officiel Moodle via le bouton ci-dessus pour consulter tous les supports de cours, polycopiés et PDF en ligne.",
+                            "Aucun document ni support de cours n'a été publié par l'enseignant pour cette matière sur Moodle.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

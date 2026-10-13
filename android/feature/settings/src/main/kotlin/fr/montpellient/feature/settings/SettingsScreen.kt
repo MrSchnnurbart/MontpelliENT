@@ -16,6 +16,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import fr.montpellient.core.designsystem.util.NotificationHelper
 import fr.montpellient.core.data.AppContainer
 import fr.montpellient.core.data.settings.SettingsRules
 import fr.montpellient.core.designsystem.component.SectionHeader
@@ -30,6 +38,50 @@ import kotlinx.coroutines.launch
 fun SettingsRoute(container: AppContainer) {
     val settings by container.settings.settings.collectAsStateWithLifecycle(AppSettings())
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            NotificationHelper.sendNotification(
+                context = context,
+                channelId = NotificationHelper.CHANNEL_TEST,
+                notificationId = 1001,
+                title = "MontpelliENT",
+                message = "Vos notifications fonctionnent parfaitement ! 🎓"
+            )
+            Toast.makeText(context, context.getString(R.string.notif_test_sent), Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, context.getString(R.string.notif_permission_denied), Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val sendTestNotif = {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                NotificationHelper.sendNotification(
+                    context = context,
+                    channelId = NotificationHelper.CHANNEL_TEST,
+                    notificationId = 1001,
+                    title = "MontpelliENT",
+                    message = "Vos notifications fonctionnent parfaitement ! 🎓"
+                )
+                Toast.makeText(context, context.getString(R.string.notif_test_sent), Toast.LENGTH_SHORT).show()
+            } else {
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        } else {
+            NotificationHelper.sendNotification(
+                context = context,
+                channelId = NotificationHelper.CHANNEL_TEST,
+                notificationId = 1001,
+                title = "MontpelliENT",
+                message = "Vos notifications fonctionnent parfaitement ! 🎓"
+            )
+            Toast.makeText(context, context.getString(R.string.notif_test_sent), Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -281,6 +333,105 @@ fun SettingsRoute(container: AppContainer) {
                             enabled = !isSaving && icalUrl.isNotBlank()
                         ) {
                             Text(if (isSaving) "Synchronisation..." else "Enregistrer et synchroniser l'EDT")
+                        }
+                    }
+                }
+            }
+
+            item {
+                SectionHeader(stringResource(R.string.notif_section))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+                ) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(
+                            stringResource(R.string.notif_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        // Emploi du temps
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                                Text(stringResource(R.string.notif_timetable), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(R.string.notif_timetable_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Switch(
+                                checked = settings.notifTimetable,
+                                onCheckedChange = { checked ->
+                                    scope.launch { container.settings.update { it.copy(notifTimetable = checked) } }
+                                }
+                            )
+                        }
+
+                        // Mail UM
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                                Text(stringResource(R.string.notif_mail), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(R.string.notif_mail_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Switch(
+                                checked = settings.notifMail,
+                                onCheckedChange = { checked ->
+                                    scope.launch { container.settings.update { it.copy(notifMail = checked) } }
+                                }
+                            )
+                        }
+
+                        // Notes & Résultats
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                                Text(stringResource(R.string.notif_grades), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(R.string.notif_grades_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Switch(
+                                checked = settings.notifGrades,
+                                onCheckedChange = { checked ->
+                                    scope.launch { container.settings.update { it.copy(notifGrades = checked) } }
+                                }
+                            )
+                        }
+
+                        // Devoirs Moodle
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                                Text(stringResource(R.string.notif_assignments), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(R.string.notif_assignments_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Switch(
+                                checked = settings.notifAssignments,
+                                onCheckedChange = { checked ->
+                                    scope.launch { container.settings.update { it.copy(notifAssignments = checked) } }
+                                }
+                            )
+                        }
+
+                        Spacer(Modifier.height(4.dp))
+
+                        OutlinedButton(
+                            onClick = { sendTestNotif() },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(stringResource(R.string.notif_test_button))
                         }
                     }
                 }

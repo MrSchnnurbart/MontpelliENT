@@ -9,4 +9,9 @@ class MontpelliENTApplication : Application(), AppContainerProvider {
     override val container: AppContainer by lazy {
         DefaultAppContainer(this)
     }
+
+    override fun onCreate() {
+        super.onCreate()
+        fr.montpellient.core.designsystem.util.NotificationHelper.createNotificationChannels(this)
+    }
 }

@@ -36,12 +36,18 @@ object TimetableDiffEngine {
         val changes = mutableListOf<TimetableDiffItem>()
         val resultList = mutableListOf<TimetableEvent>()
 
+        val isInitialImport = previousEvents.isEmpty()
+
         for (newEvent in newEvents) {
             val old = prevMap[newEvent.id]
             if (old == null) {
-                // Nouveau cours ajouté
-                changes.add(TimetableDiffItem.Added(newEvent))
-                resultList.add(newEvent.copy(status = EventStatus.ADDED))
+                // Nouveau cours ajouté (seulement si ce n'est pas le tout premier import)
+                if (!isInitialImport) {
+                    changes.add(TimetableDiffItem.Added(newEvent))
+                    resultList.add(newEvent.copy(status = EventStatus.ADDED))
+                } else {
+                    resultList.add(newEvent.copy(status = EventStatus.NORMAL))
+                }
             } else {
                 val roomChanged = old.rooms != newEvent.rooms
                 val timeChanged = old.start != newEvent.start || old.end != newEvent.end

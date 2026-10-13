@@ -88,8 +88,15 @@ class DemoCrousRepository(private val data: DemoData) : CrousRepository {
     }
     override val allAffluence: Flow<Map<String, Affluence>> = affluenceState
 
-    override suspend fun setFavourite(id: String, favourite: Boolean) =
-        restaurantsState.update { list -> list.map { if (it.id == id) it.copy(isFavourite = favourite) else it } }
+    override suspend fun setFavourite(id: String, favourite: Boolean) {
+        restaurantsState.update { list ->
+            list.map {
+                if (it.id == id) it.copy(isFavourite = favourite)
+                else if (favourite) it.copy(isFavourite = false)
+                else it
+            }
+        }
+    }
 
     override suspend fun reportAffluence(restaurantId: String, level: AffluenceLevel) {
         affluenceState.update { map ->

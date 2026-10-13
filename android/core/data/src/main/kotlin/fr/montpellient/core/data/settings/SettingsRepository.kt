@@ -53,6 +53,10 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
         val homeCards = stringPreferencesKey("home_cards")
         val hiddenHomeCards = stringPreferencesKey("hidden_home_cards")
         val initialSyncCompleted = booleanPreferencesKey("initial_sync_completed")
+        val notifTimetable = booleanPreferencesKey("notif_timetable")
+        val notifMail = booleanPreferencesKey("notif_mail")
+        val notifGrades = booleanPreferencesKey("notif_grades")
+        val notifAssignments = booleanPreferencesKey("notif_assignments")
     }
 
     private fun Preferences.toSettings(): AppSettings {
@@ -71,6 +75,10 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
             hiddenHomeCards = SettingsCodec.decodeCards(this[Keys.hiddenHomeCards])?.toSet()
                 ?: defaults.hiddenHomeCards,
             initialSyncCompleted = this[Keys.initialSyncCompleted] ?: defaults.initialSyncCompleted,
+            notifTimetable = this[Keys.notifTimetable] ?: defaults.notifTimetable,
+            notifMail = this[Keys.notifMail] ?: defaults.notifMail,
+            notifGrades = this[Keys.notifGrades] ?: defaults.notifGrades,
+            notifAssignments = this[Keys.notifAssignments] ?: defaults.notifAssignments,
         )
     }
 
@@ -87,6 +95,10 @@ class DataStoreSettingsRepository(context: Context) : SettingsRepository {
         this[Keys.homeCards] = SettingsCodec.encode(s.homeCards)
         this[Keys.hiddenHomeCards] = SettingsCodec.encode(s.hiddenHomeCards.toList())
         this[Keys.initialSyncCompleted] = s.initialSyncCompleted
+        this[Keys.notifTimetable] = s.notifTimetable
+        this[Keys.notifMail] = s.notifMail
+        this[Keys.notifGrades] = s.notifGrades
+        this[Keys.notifAssignments] = s.notifAssignments
     }
 }
 

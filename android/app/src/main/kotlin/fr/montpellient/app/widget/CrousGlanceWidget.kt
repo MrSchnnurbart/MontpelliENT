@@ -36,16 +36,22 @@ class CrousGlanceWidget : GlanceAppWidget() {
         val restaurants = container.crous.restaurants.first()
         val fav = restaurants.firstOrNull { it.isFavourite } ?: restaurants.firstOrNull()
         val affluence = fav?.let { container.crous.affluence(it.id).first() }
+        val menus = fav?.let { container.crous.menus(it.id).first() } ?: emptyList()
+        val todayMenu = menus.firstOrNull()
 
         provideContent {
             GlanceTheme {
-                CrousWidgetContent(fav, affluence?.level)
+                CrousWidgetContent(fav, affluence?.level, todayMenu)
             }
         }
     }
 
     @Composable
-    private fun CrousWidgetContent(restaurant: Restaurant?, affluenceLevel: AffluenceLevel?) {
+    private fun CrousWidgetContent(
+        restaurant: Restaurant?,
+        affluenceLevel: AffluenceLevel?,
+        menu: fr.montpellient.core.model.DailyMenu?
+    ) {
         Box(
             modifier = GlanceModifier
                 .fillMaxSize()
@@ -60,7 +66,7 @@ class CrousGlanceWidget : GlanceAppWidget() {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "CROUS MONTPELLIER",
+                            text = "CROUS FAVORITE",
                             style = TextStyle(
                                 color = GlanceTheme.colors.primary,
                                 fontWeight = FontWeight.Bold,
@@ -68,7 +74,9 @@ class CrousGlanceWidget : GlanceAppWidget() {
                             )
                         )
                         Spacer(GlanceModifier.defaultWeight())
-                        val affluenceLabel = when (affluenceLevel) {
+                        val affluenceLabel = if (!restaurant.isOpenNow) {
+                            "Fermé"
+                        } else when (affluenceLevel) {
                             AffluenceLevel.LOW -> "🟢 Faible"
                             AffluenceLevel.MEDIUM -> "🟡 Modéré"
                             AffluenceLevel.HIGH -> "🔴 Forte"
@@ -84,7 +92,7 @@ class CrousGlanceWidget : GlanceAppWidget() {
                         )
                     }
 
-                    Spacer(GlanceModifier.height(6.dp))
+                    Spacer(GlanceModifier.height(4.dp))
 
                     Text(
                         text = restaurant.name,
@@ -96,15 +104,36 @@ class CrousGlanceWidget : GlanceAppWidget() {
                         maxLines = 1
                     )
 
-                    Spacer(GlanceModifier.height(4.dp))
+                    Spacer(GlanceModifier.height(2.dp))
 
                     Text(
                         text = "📍 ${restaurant.campus} • ${restaurant.openingHours}",
                         style = TextStyle(
                             color = GlanceTheme.colors.onSurfaceVariant,
-                            fontSize = 12.sp
+                            fontSize = 11.sp
                         ),
                         maxLines = 1
+                    )
+
+                    Spacer(GlanceModifier.height(6.dp))
+
+                    // Menu du jour
+                    val mainDishes = menu?.meals?.firstOrNull()?.stations?.firstOrNull()?.dishes?.take(2)?.joinToString(", ")
+                    val secondDishes = menu?.meals?.firstOrNull()?.stations?.getOrNull(1)?.dishes?.firstOrNull()
+                    val menuSummary = when {
+                        !mainDishes.isNullOrBlank() && !secondDishes.isNullOrBlank() -> "$mainDishes • $secondDishes"
+                        !mainDishes.isNullOrBlank() -> mainDishes
+                        else -> "Menu du jour disponible sur place"
+                    }
+
+                    Text(
+                        text = "🍽️ Menu : $menuSummary",
+                        style = TextStyle(
+                            color = GlanceTheme.colors.onSurface,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Normal
+                        ),
+                        maxLines = 2
                     )
                 }
             } else {

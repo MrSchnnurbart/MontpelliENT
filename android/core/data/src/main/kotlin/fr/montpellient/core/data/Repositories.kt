@@ -37,6 +37,7 @@ interface TimetableRepository : Refreshable {
     fun events(from: LocalDate, toInclusive: LocalDate): Flow<List<TimetableEvent>>
     suspend fun setCustomIcalUrl(url: String): Result<Unit> = Result.success(Unit)
     suspend fun getCustomIcalUrl(): String? = null
+    suspend fun markDaySeen(date: LocalDate) {}
 }
 
 

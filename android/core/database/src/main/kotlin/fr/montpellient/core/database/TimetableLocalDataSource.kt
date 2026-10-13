@@ -70,6 +70,7 @@ data class TimetableEventEntity(
 interface TimetableLocalDataSource {
     val eventsFlow: Flow<List<TimetableEvent>>
     suspend fun saveEvents(events: List<TimetableEvent>)
+    suspend fun markDaySeen(date: LocalDate)
     suspend fun getEvents(from: LocalDate, toInclusive: LocalDate): List<TimetableEvent>
     suspend fun clear()
 }
@@ -106,6 +107,23 @@ class EncryptedTimetableStore(
         val serialized = json.encodeToString(entities)
         storeFile.writeText(serialized)
         _eventsFlow.value = events
+    }
+
+    override suspend fun markDaySeen(date: LocalDate) = withContext(Dispatchers.IO) {
+        val current = _eventsFlow.value
+        val hasChanges = current.any {
+            it.start.toLocalDate() == date && it.status == EventStatus.ADDED
+        }
+        if (hasChanges) {
+            val updated = current.map { event ->
+                if (event.start.toLocalDate() == date && event.status == EventStatus.ADDED) {
+                    event.copy(status = EventStatus.NORMAL)
+                } else {
+                    event
+                }
+            }
+            saveEvents(updated)
+        }
     }
 
     override suspend fun getEvents(from: LocalDate, toInclusive: LocalDate): List<TimetableEvent> {

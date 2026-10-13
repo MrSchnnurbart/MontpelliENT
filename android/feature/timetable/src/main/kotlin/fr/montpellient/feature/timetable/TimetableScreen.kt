@@ -43,6 +43,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -89,6 +90,7 @@ fun TimetableRoute(container: AppContainer) {
         isRefreshing = refreshing,
         onRefresh = vm::refresh,
         onImportIcal = vm::importCustomIcalUrl,
+        onDaySeen = vm::markDaySeen,
     )
 }
 
@@ -102,6 +104,7 @@ fun TimetableScreen(
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     onImportIcal: suspend (String) -> Result<Unit> = { Result.success(Unit) },
+    onDaySeen: (LocalDate) -> Unit = {},
 ) {
 
     val pageCount = ChronoUnit.DAYS.between(windowStart, windowEnd).toInt() + 1
@@ -110,6 +113,10 @@ fun TimetableScreen(
     val scope = rememberCoroutineScope()
     val selectedDate = windowStart.plusDays(pager.currentPage.toLong())
     var detail by remember { mutableStateOf<TimetableEvent?>(null) }
+
+    LaunchedEffect(selectedDate) {
+        onDaySeen(selectedDate)
+    }
 
     fun goTo(date: LocalDate) {
         val page = ChronoUnit.DAYS.between(windowStart, date).toInt().coerceIn(0, pageCount - 1)
@@ -420,7 +427,9 @@ private fun StatusRow(event: TimetableEvent, isNow: Boolean) {
             EventStatus.ADDED -> StatusChip(stringResource(R.string.timetable_status_added), cs.secondaryContainer, cs.onSecondaryContainer)
             EventStatus.NORMAL -> Unit
         }
-        StatusChip(typeLabel(event.type), cs.surface.copy(alpha = 0.7f), cs.onSurface)
+        if (event.type != CourseType.CM && event.type != CourseType.OTHER) {
+            StatusChip(typeLabel(event.type), cs.surface.copy(alpha = 0.7f), cs.onSurface)
+        }
     }
 }
 

@@ -49,7 +49,16 @@ class RealCrousRepository(
 
     override suspend fun setFavourite(id: String, favourite: Boolean) {
         _restaurantsState.update { list ->
-            list.map { if (it.id == id) it.copy(isFavourite = favourite) else it }
+            list.map {
+                if (it.id == id) {
+                    it.copy(isFavourite = favourite)
+                } else if (favourite) {
+                    // Un seul restaurant peut être favori
+                    it.copy(isFavourite = false)
+                } else {
+                    it
+                }
+            }
         }
     }
 

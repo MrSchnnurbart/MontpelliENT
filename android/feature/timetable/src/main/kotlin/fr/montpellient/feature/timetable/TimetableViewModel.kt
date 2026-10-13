@@ -45,5 +45,11 @@ class TimetableViewModel(
         _isRefreshing.value = false
         return res
     }
+
+    fun markDaySeen(date: LocalDate) {
+        viewModelScope.launch {
+            container.timetable.markDaySeen(date)
+        }
+    }
 }
 

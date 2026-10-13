@@ -47,6 +47,10 @@ data class AppSettings(
     val homeCards: List<HomeCard> = HomeCard.entries.toList(),
     val hiddenHomeCards: Set<HomeCard> = emptySet(),
     val initialSyncCompleted: Boolean = false,
+    val notifTimetable: Boolean = true,
+    val notifMail: Boolean = true,
+    val notifGrades: Boolean = true,
+    val notifAssignments: Boolean = true,
 ) {
     val seedColor: Long get() = if (palette == ThemePalette.CUSTOM) customSeedColor else palette.seed
 
