@@ -562,6 +562,10 @@ class ImapClient(
         if (text.startsWith("--") ||
             text.startsWith("Content-", ignoreCase = true) ||
             text.startsWith("Mime-", ignoreCase = true) ||
+            text.startsWith("boundary=", ignoreCase = true) ||
+            text.contains("boundary=", ignoreCase = true) ||
+            text.startsWith("charset=", ignoreCase = true) ||
+            text.contains("charset=", ignoreCase = true) ||
             text.startsWith("Received:", ignoreCase = true) ||
             text.startsWith("Return-Path:", ignoreCase = true) ||
             text.startsWith("X-", ignoreCase = true) ||

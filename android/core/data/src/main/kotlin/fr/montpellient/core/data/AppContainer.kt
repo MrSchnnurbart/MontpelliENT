@@ -248,6 +248,10 @@ class DefaultAppContainer(context: Context) : AppContainer {
                 return realMailRepository.loadFullBody(id)
             }
 
+            override suspend fun getFullMessage(id: String): fr.montpellient.core.model.MailMessage? {
+                return realMailRepository.getFullMessage(id)
+            }
+
             override suspend fun refresh() {
                 realMailRepository.refresh()
             }
