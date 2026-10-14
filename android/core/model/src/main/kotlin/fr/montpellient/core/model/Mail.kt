@@ -21,7 +21,32 @@ data class MailAttachment(
     val fileName: String,
     val mimeType: String,
     val sizeBytes: Long,
-)
+    val data: ByteArray? = null,
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        other as MailAttachment
+        if (id != other.id) return false
+        if (fileName != other.fileName) return false
+        if (mimeType != other.mimeType) return false
+        if (sizeBytes != other.sizeBytes) return false
+        if (data != null) {
+            if (other.data == null) return false
+            if (!data.contentEquals(other.data)) return false
+        } else if (other.data != null) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + fileName.hashCode()
+        result = 31 * result + mimeType.hashCode()
+        result = 31 * result + sizeBytes.hashCode()
+        result = 31 * result + (data?.contentHashCode() ?: 0)
+        return result
+    }
+}
 
 data class MailMessage(
     val id: String,
@@ -32,6 +57,7 @@ data class MailMessage(
     val subject: String,
     val preview: String,
     val bodyText: String,
+    val bodyHtml: String? = null,
     val date: LocalDateTime,
     val isRead: Boolean,
     val isFlagged: Boolean = false,

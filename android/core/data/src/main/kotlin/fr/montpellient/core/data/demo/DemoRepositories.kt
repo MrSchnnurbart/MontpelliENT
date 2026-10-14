@@ -73,6 +73,12 @@ class DemoMailRepository(private val data: DemoData) : MailRepository {
     override suspend fun setFlagged(id: String, flagged: Boolean) =
         state.update { list -> list.map { if (it.id == id) it.copy(isFlagged = flagged) else it } }
 
+    override suspend fun loadFullBody(id: String): String? =
+        state.value.firstOrNull { it.id == id }?.bodyText
+
+    override suspend fun getFullMessage(id: String): MailMessage? =
+        state.value.firstOrNull { it.id == id }
+
     override suspend fun refresh() = delay(DEMO_SYNC_DELAY_MS)
 }
 

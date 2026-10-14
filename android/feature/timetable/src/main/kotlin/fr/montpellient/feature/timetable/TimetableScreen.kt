@@ -278,7 +278,7 @@ private fun WeekStrip(
     val monday = selected.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
     Column(Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { onSelect(selected.minusWeeks(1)) }) {
+            IconButton(onClick = { onSelect(monday.minusWeeks(1)) }) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = stringResource(R.string.timetable_previous_week))
             }
             Text(
@@ -287,7 +287,7 @@ private fun WeekStrip(
                 modifier = Modifier.weight(1f),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
-            IconButton(onClick = { onSelect(selected.plusWeeks(1)) }) {
+            IconButton(onClick = { onSelect(monday.plusWeeks(1)) }) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = stringResource(R.string.timetable_next_week))
             }
         }

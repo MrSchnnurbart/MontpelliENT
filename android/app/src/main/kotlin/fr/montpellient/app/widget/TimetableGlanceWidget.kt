@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -20,9 +19,9 @@ import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.lazy.items
 import androidx.glance.appwidget.provideContent
-import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.background
+import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
@@ -32,6 +31,7 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
@@ -43,6 +43,7 @@ import fr.montpellient.core.model.CourseType
 import fr.montpellient.core.model.TimetableEvent
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -51,19 +52,19 @@ class TimetableGlanceWidget : GlanceAppWidget() {
     override val stateDefinition = PreferencesGlanceStateDefinition
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val prefs = getAppWidgetState<Preferences>(context, PreferencesGlanceStateDefinition, id)
-        val dayOffset = prefs[DAY_OFFSET_KEY] ?: 0
-        val targetDate = LocalDate.now().plusDays(dayOffset.toLong())
-
         val container = context.appContainer
-        val events = container.timetable.events(targetDate, targetDate).first().sortedBy { it.start }
+        val today = LocalDate.now()
+        // Charger une fenêtre de 3 semaines pour permettre la navigation fluide entre les jours
+        val windowStart = today.minusDays(7)
+        val windowEnd = today.plusDays(14)
+        val allEvents = container.timetable.events(windowStart, windowEnd).first()
+        val eventsByDay = allEvents.groupBy { it.start.toLocalDate() }
 
         provideContent {
             GlanceTheme {
                 TimetableWidgetContent(
-                    targetDate = targetDate,
-                    dayOffset = dayOffset,
-                    events = events
+                    today = today,
+                    eventsByDay = eventsByDay
                 )
             }
         }
@@ -71,11 +72,17 @@ class TimetableGlanceWidget : GlanceAppWidget() {
 
     @Composable
     private fun TimetableWidgetContent(
-        targetDate: LocalDate,
-        dayOffset: Int,
-        events: List<TimetableEvent>
+        today: LocalDate,
+        eventsByDay: Map<LocalDate, List<TimetableEvent>>
     ) {
-        val today = LocalDate.now()
+        val dayOffset = currentState(DAY_OFFSET_KEY) ?: 0
+        val targetDate = today.plusDays(dayOffset.toLong())
+        val events = eventsByDay[targetDate].orEmpty().sortedBy { it.start }
+        val now = LocalDateTime.now()
+
+        val timeFmt = DateTimeFormatter.ofPattern("HH:mm")
+        val currentHourStr = now.format(timeFmt)
+
         val dateTitle = when {
             targetDate == today -> "Aujourd'hui"
             targetDate == today.plusDays(1) -> "Demain"
@@ -84,26 +91,29 @@ class TimetableGlanceWidget : GlanceAppWidget() {
                 .replaceFirstChar { it.uppercase() }
         }
 
-        val dateSubtitle = targetDate.format(DateTimeFormatter.ofPattern("d MMMM", Locale.FRENCH))
+        val baseSubtitle = targetDate.format(DateTimeFormatter.ofPattern("d MMMM", Locale.FRENCH))
+        val dateSubtitle = if (targetDate == today) "$baseSubtitle • Il est $currentHourStr" else baseSubtitle
 
         Box(
             modifier = GlanceModifier
                 .fillMaxSize()
                 .background(GlanceTheme.colors.surface)
-                .cornerRadius(16.dp)
+                .cornerRadius(18.dp)
                 .padding(12.dp)
         ) {
             Column(modifier = GlanceModifier.fillMaxSize()) {
-                // Barre de navigation de jour (Précédent | Date | Suivant)
+                // Barre de navigation (◀ | Date | ▶)
                 Row(
-                    modifier = GlanceModifier.fillMaxWidth().padding(bottom = 8.dp),
+                    modifier = GlanceModifier
+                        .fillMaxWidth()
+                        .padding(bottom = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = GlanceModifier
-                            .cornerRadius(12.dp)
+                            .size(42.dp)
+                            .cornerRadius(21.dp)
                             .background(GlanceTheme.colors.surfaceVariant)
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
                             .clickable(actionRunCallback<ChangeDayAction>(actionParametersOf(ChangeDayAction.DeltaKey to -1))),
                         contentAlignment = Alignment.Center
                     ) {
@@ -111,7 +121,7 @@ class TimetableGlanceWidget : GlanceAppWidget() {
                             text = "◀",
                             style = TextStyle(
                                 color = GlanceTheme.colors.primary,
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         )
@@ -134,7 +144,7 @@ class TimetableGlanceWidget : GlanceAppWidget() {
                             maxLines = 1
                         )
                         Text(
-                            text = if (dayOffset != 0) "$dateSubtitle • (Aujourd'hui)" else dateSubtitle,
+                            text = if (dayOffset != 0) "$dateSubtitle • (Retour)" else dateSubtitle,
                             style = TextStyle(
                                 color = if (dayOffset != 0) GlanceTheme.colors.primary else GlanceTheme.colors.onSurfaceVariant,
                                 fontSize = 10.sp,
@@ -147,9 +157,9 @@ class TimetableGlanceWidget : GlanceAppWidget() {
 
                     Box(
                         modifier = GlanceModifier
-                            .cornerRadius(12.dp)
+                            .size(42.dp)
+                            .cornerRadius(21.dp)
                             .background(GlanceTheme.colors.surfaceVariant)
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
                             .clickable(actionRunCallback<ChangeDayAction>(actionParametersOf(ChangeDayAction.DeltaKey to 1))),
                         contentAlignment = Alignment.Center
                     ) {
@@ -157,7 +167,7 @@ class TimetableGlanceWidget : GlanceAppWidget() {
                             text = "▶",
                             style = TextStyle(
                                 color = GlanceTheme.colors.primary,
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         )
@@ -168,7 +178,7 @@ class TimetableGlanceWidget : GlanceAppWidget() {
                     Box(
                         modifier = GlanceModifier
                             .fillMaxSize()
-                            .padding(top = 16.dp),
+                            .padding(top = 24.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -182,10 +192,24 @@ class TimetableGlanceWidget : GlanceAppWidget() {
                         )
                     }
                 } else {
+                    val activeEvent = if (targetDate == today) {
+                        events.firstOrNull { !it.isCancelled && !now.isBefore(it.start) && now.isBefore(it.end) }
+                    } else null
+                    val nextUpcomingEvent = if (targetDate == today && activeEvent == null) {
+                        events.firstOrNull { !it.isCancelled && now.isBefore(it.start) }
+                    } else null
+
                     LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
                         items(events) { event ->
-                            TimetableEventItem(event)
-                            Spacer(GlanceModifier.height(6.dp))
+                            val isNow = event == activeEvent
+                            val isNext = event == nextUpcomingEvent
+                            Box(
+                                modifier = GlanceModifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp)
+                            ) {
+                                TimetableEventItem(event, isNow, isNext)
+                            }
                         }
                     }
                 }
@@ -194,7 +218,7 @@ class TimetableGlanceWidget : GlanceAppWidget() {
     }
 
     @Composable
-    private fun TimetableEventItem(event: TimetableEvent) {
+    private fun TimetableEventItem(event: TimetableEvent, isNow: Boolean, isNext: Boolean = false) {
         val timeFmt = DateTimeFormatter.ofPattern("HH:mm")
         val isCancelled = event.isCancelled
         val timeStr = "${event.start.format(timeFmt)} - ${event.end.format(timeFmt)}"
@@ -202,41 +226,86 @@ class TimetableGlanceWidget : GlanceAppWidget() {
         Box(
             modifier = GlanceModifier
                 .fillMaxWidth()
-                .cornerRadius(10.dp)
-                .background(GlanceTheme.colors.surfaceVariant)
-                .padding(horizontal = 10.dp, vertical = 8.dp)
+                .cornerRadius(12.dp)
+                .background(
+                    when {
+                        isNow -> GlanceTheme.colors.primaryContainer
+                        isNext -> GlanceTheme.colors.surfaceVariant
+                        else -> GlanceTheme.colors.surfaceVariant
+                    }
+                )
+                .padding(horizontal = 12.dp, vertical = 9.dp)
         ) {
             Row(
                 modifier = GlanceModifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Bandeau d'accent vertical gauche
+                // Indicateur vertical accent
                 Box(
                     modifier = GlanceModifier
-                        .width(4.dp)
-                        .height(38.dp)
+                        .width(if (isNow || isNext) 5.dp else 4.dp)
+                        .height(40.dp)
                         .cornerRadius(2.dp)
                         .background(
-                            if (isCancelled) GlanceTheme.colors.error
-                            else GlanceTheme.colors.primary
+                            when {
+                                isCancelled -> GlanceTheme.colors.error
+                                isNow -> GlanceTheme.colors.primary
+                                isNext -> GlanceTheme.colors.primary
+                                else -> GlanceTheme.colors.outline
+                            }
                         )
                 ) {}
 
-                Spacer(GlanceModifier.width(8.dp))
+                Spacer(GlanceModifier.width(10.dp))
 
                 Column(modifier = GlanceModifier.defaultWeight()) {
                     Row(
                         modifier = GlanceModifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = timeStr,
-                            style = TextStyle(
-                                color = if (isCancelled) GlanceTheme.colors.error else GlanceTheme.colors.primary,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp
+                        if (isNow) {
+                            Box(
+                                modifier = GlanceModifier
+                                    .cornerRadius(6.dp)
+                                    .background(GlanceTheme.colors.primary)
+                                    .padding(horizontal = 7.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "● $timeStr (EN COURS)",
+                                    style = TextStyle(
+                                        color = GlanceTheme.colors.onPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp
+                                    )
+                                )
+                            }
+                        } else if (isNext) {
+                            Box(
+                                modifier = GlanceModifier
+                                    .cornerRadius(6.dp)
+                                    .background(GlanceTheme.colors.surface)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "▶ $timeStr (À SUIVRE)",
+                                    style = TextStyle(
+                                        color = GlanceTheme.colors.primary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp
+                                    )
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = timeStr,
+                                style = TextStyle(
+                                    color = if (isCancelled) GlanceTheme.colors.error else GlanceTheme.colors.onSurfaceVariant,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp
+                                )
                             )
-                        )
+                        }
+
                         if (isCancelled) {
                             Spacer(GlanceModifier.width(6.dp))
                             Text(
@@ -252,7 +321,7 @@ class TimetableGlanceWidget : GlanceAppWidget() {
                             Text(
                                 text = "[${event.type.name}]",
                                 style = TextStyle(
-                                    color = GlanceTheme.colors.onSurfaceVariant,
+                                    color = if (isNow) GlanceTheme.colors.onPrimaryContainer else GlanceTheme.colors.onSurfaceVariant,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 10.sp
                                 )
@@ -260,7 +329,7 @@ class TimetableGlanceWidget : GlanceAppWidget() {
                         }
                     }
 
-                    Spacer(GlanceModifier.height(2.dp))
+                    Spacer(GlanceModifier.height(3.dp))
 
                     Text(
                         text = event.subject,
@@ -282,7 +351,7 @@ class TimetableGlanceWidget : GlanceAppWidget() {
                         Text(
                             text = details,
                             style = TextStyle(
-                                color = GlanceTheme.colors.onSurfaceVariant,
+                                color = if (isNow) GlanceTheme.colors.onPrimaryContainer else GlanceTheme.colors.onSurfaceVariant,
                                 fontSize = 11.sp
                             ),
                             maxLines = 1
@@ -306,13 +375,15 @@ class ChangeDayAction : ActionCallback {
     ) {
         val delta = parameters[DeltaKey] ?: 0
         val reset = parameters[ResetKey] ?: false
-        updateAppWidgetState(context, glanceId) { prefs ->
+        updateAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId) { prefs ->
+            val mutable = prefs.toMutablePreferences()
             if (reset) {
-                prefs[TimetableGlanceWidget.DAY_OFFSET_KEY] = 0
+                mutable[TimetableGlanceWidget.DAY_OFFSET_KEY] = 0
             } else {
                 val current = prefs[TimetableGlanceWidget.DAY_OFFSET_KEY] ?: 0
-                prefs[TimetableGlanceWidget.DAY_OFFSET_KEY] = current + delta
+                mutable[TimetableGlanceWidget.DAY_OFFSET_KEY] = current + delta
             }
+            mutable
         }
         TimetableGlanceWidget().update(context, glanceId)
     }

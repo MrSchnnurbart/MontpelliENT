@@ -117,24 +117,42 @@ class CrousGlanceWidget : GlanceAppWidget() {
 
                     Spacer(GlanceModifier.height(6.dp))
 
-                    // Menu du jour
-                    val mainDishes = menu?.meals?.firstOrNull()?.stations?.firstOrNull()?.dishes?.take(2)?.joinToString(", ")
-                    val secondDishes = menu?.meals?.firstOrNull()?.stations?.getOrNull(1)?.dishes?.firstOrNull()
-                    val menuSummary = when {
-                        !mainDishes.isNullOrBlank() && !secondDishes.isNullOrBlank() -> "$mainDishes • $secondDishes"
-                        !mainDishes.isNullOrBlank() -> mainDishes
-                        else -> "Menu du jour disponible sur place"
+                    // Menu du jour multi-lignes
+                    val stations = menu?.meals?.firstOrNull()?.stations.orEmpty()
+                    if (stations.isNotEmpty()) {
+                        Column(modifier = GlanceModifier.fillMaxWidth()) {
+                            stations.take(3).forEach { station ->
+                                val icon = when {
+                                    station.name.contains("entrée", ignoreCase = true) -> "🥗"
+                                    station.name.contains("plat", ignoreCase = true) -> "🍲"
+                                    station.name.contains("dessert", ignoreCase = true) -> "🍰"
+                                    station.name.contains("garniture", ignoreCase = true) -> "🍚"
+                                    else -> "🍽️"
+                                }
+                                val dishesStr = station.dishes.take(2).joinToString(", ")
+                                Text(
+                                    text = "$icon ${station.name} : $dishesStr",
+                                    style = TextStyle(
+                                        color = GlanceTheme.colors.onSurface,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Normal
+                                    ),
+                                    maxLines = 1
+                                )
+                                Spacer(GlanceModifier.height(2.dp))
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = "🍽️ Menu du jour disponible sur place",
+                            style = TextStyle(
+                                color = GlanceTheme.colors.onSurfaceVariant,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Normal
+                            ),
+                            maxLines = 1
+                        )
                     }
-
-                    Text(
-                        text = "🍽️ Menu : $menuSummary",
-                        style = TextStyle(
-                            color = GlanceTheme.colors.onSurface,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Normal
-                        ),
-                        maxLines = 2
-                    )
                 }
             } else {
                 Column(

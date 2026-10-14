@@ -60,21 +60,42 @@ class RealMailRepository(
     }
 
     override suspend fun loadFullBody(id: String): String? {
+        val full = getFullMessage(id)
+        return full?.bodyText
+    }
+
+    private val _fullyFetchedIds = mutableSetOf<String>()
+
+    override suspend fun getFullMessage(id: String): MailMessage? {
         val existing = _messages.value.firstOrNull { it.id == id }
-        if (existing != null && existing.bodyText.length > 200 && !existing.bodyText.startsWith("FLAGS")) {
-            return existing.bodyText
+        if (existing != null && id in _fullyFetchedIds) {
+            return existing
         }
 
-        val creds = secureStorage.getCredentials() ?: return existing?.bodyText
-        val result = imapClient.fetchMessageBody(creds.first, creds.second, id)
-        if (result is MailResult.Success && result.data.isNotBlank()) {
-            val fullBody = result.data
+        val creds = secureStorage.getCredentials() ?: return existing
+        android.util.Log.i("RealMailRepository", "Récupération du message complet UID=$id pour ${creds.first}...")
+        val result = imapClient.fetchFullMessageDetails(creds.first, creds.second, id)
+        if (result is MailResult.Success) {
+            val parsed = result.data
+            _fullyFetchedIds.add(id)
+            var updated: MailMessage? = null
             _messages.value = _messages.value.map {
-                if (it.id == id) it.copy(bodyText = fullBody) else it
+                if (it.id == id) {
+                    val msg = it.copy(
+                        bodyText = if (parsed.bodyText.isNotBlank()) parsed.bodyText else it.bodyText,
+                        bodyHtml = parsed.bodyHtml,
+                        attachments = if (parsed.attachments.isNotEmpty()) parsed.attachments else it.attachments
+                    )
+                    updated = msg
+                    msg
+                } else it
             }
-            return fullBody
+            android.util.Log.i("RealMailRepository", "Message UID=$id analysé (html=${parsed.bodyHtml != null}, atts=${parsed.attachments.size})")
+            return updated ?: existing
+        } else if (result is MailResult.Error) {
+            android.util.Log.e("RealMailRepository", "Erreur fetchFullMessageDetails UID=$id: ${result.message}", result.cause)
         }
-        return existing?.bodyText
+        return existing
     }
 
     override suspend fun loadMore(): Boolean {

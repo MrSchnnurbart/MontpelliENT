@@ -23,9 +23,14 @@
 -dontwarn org.bouncycastle.**
 -dontwarn org.openjsse.**
 
-# Glance AppWidgets
+# Glance AppWidgets & ActionCallbacks
 -keep class fr.montpellient.app.widget.** { *; }
 -keep class androidx.glance.appwidget.** { *; }
+-keep class * implements androidx.glance.appwidget.action.ActionCallback {
+    <init>();
+    *;
+}
+-keep class fr.montpellient.app.widget.ChangeDayAction { *; }
 
 # Jakarta Mail (connector:mail)
 -keep class jakarta.mail.** { *; }
