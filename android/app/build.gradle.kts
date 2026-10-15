@@ -77,28 +77,6 @@ android {
     }
 }
 
-tasks.register<Copy>("copyReleaseApk") {
-    dependsOn("assembleRelease")
-    from(layout.buildDirectory.dir("outputs/apk/release")) {
-        include("*.apk")
-        rename { "MontpelliENT-v${android.defaultConfig.versionName}-release.apk" }
-    }
-    into(rootProject.file("dist"))
-}
-
-tasks.register<Copy>("copyDebugApk") {
-    dependsOn("assembleDebug")
-    from(layout.buildDirectory.dir("outputs/apk/debug")) {
-        include("*.apk")
-        rename { "MontpelliENT-v${android.defaultConfig.versionName}-debug.apk" }
-    }
-    into(rootProject.file("dist"))
-}
-
-afterEvaluate {
-    tasks.findByName("assembleRelease")?.finalizedBy("copyReleaseApk")
-    tasks.findByName("assembleDebug")?.finalizedBy("copyDebugApk")
-}
 
 
 

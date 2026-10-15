@@ -59,13 +59,10 @@ jobs:
           mkdir -p release-artifacts
           
           # Recherche et standardisation du binaire APK
-          APK_FOUND=""
-          if [ -f "dist/MontpelliENT-${TAG}-release.apk" ]; then
-            APK_FOUND="dist/MontpelliENT-${TAG}-release.apk"
-          elif [ -f "dist/MontpelliENT-v1.0.0-release.apk" ]; then
-            APK_FOUND="dist/MontpelliENT-v1.0.0-release.apk"
-          else
-            APK_FOUND=$(find android/app/build/outputs/apk/release/ dist/ -name "*release*.apk" | head -n 1)
+          APK_FOUND=$(find android/app/build/outputs/apk/release/ -name "*.apk" | head -n 1)
+          if [ -z "$APK_FOUND" ]; then
+            echo "Erreur: Aucun binaire APK trouvé dans android/app/build/outputs/apk/release/"
+            exit 1
           fi
           
           cp "$APK_FOUND" "release-artifacts/MontpelliENT-${TAG}.apk"
