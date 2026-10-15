@@ -12,4 +12,15 @@
     <string name="login_btn_cancel">Annuler</string>
     <string name="login_connecting">Connexion sécurisée en cours…</string>
     <string name="login_security_note">Vos identifiants sont chiffrés avec Android Keystore (AES-256) sur votre appareil et ne transitent par aucun serveur tiers.</string>
+    <string name="sync_title">Initialisation de vos données</string>
+    <string name="sync_step_connected">Connexion aux serveurs UM établie…</string>
+    <string name="sync_step_cas">Vérification de la session CAS &amp; Profil…</string>
+    <string name="sync_step_timetable">Synchronisation de l\'Emploi du temps ADE…</string>
+    <string name="sync_step_services">Interrogation de Moodle &amp; Apogée…</string>
+    <string name="sync_step_done">Synchronisation terminée avec succès !</string>
+    <string name="sync_ade_title">Emploi du temps ADE Campus</string>
+    <string name="sync_ade_desc">Pour charger vos cours réels, renseignez le lien d\'export iCal de votre agenda (trouvable sur l\'ENT &gt; ADE &gt; Options &gt; Exporter mon agenda). Vous pourrez aussi le renseigner plus tard.</string>
+    <string name="sync_ade_label">URL iCal ADE (.ics ou direct_cal)</string>
+    <string name="sync_ade_skip">Passer</string>
+    <string name="sync_ade_confirm">Valider</string>
 </resources>

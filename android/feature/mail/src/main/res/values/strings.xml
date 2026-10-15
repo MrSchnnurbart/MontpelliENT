@@ -3,4 +3,11 @@
     <string name="mail_title">Messagerie UM</string>
     <string name="mail_empty">Aucun message</string>
     <string name="mail_unread">%d non lus</string>
+    <string name="mail_load_more">Charger 10 mails plus anciens</string>
+    <string name="mail_from">De : %1$s &lt;%2$s&gt;</string>
+    <string name="mail_loading_full">Chargement du message complet…</string>
+    <string name="mail_attachments">Pièces jointes (%d) :</string>
+    <string name="mail_content_unavailable">Contenu textuel non disponible</string>
+    <string name="mail_downloading_attachment">Téléchargement de la pièce jointe…</string>
+    <string name="mail_open_attachment">Ouvrir %s</string>
 </resources>

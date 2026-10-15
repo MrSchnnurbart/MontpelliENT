@@ -76,6 +76,7 @@ class TimetableGlanceWidget : GlanceAppWidget() {
         eventsByDay: Map<LocalDate, List<TimetableEvent>>
     ) {
         val dayOffset = currentState(DAY_OFFSET_KEY) ?: 0
+        android.util.Log.d("TimetableWidget", "Widget recomposed: dayOffset=$dayOffset")
         val targetDate = today.plusDays(dayOffset.toLong())
         val events = eventsByDay[targetDate].orEmpty().sortedBy { it.start }
         val now = LocalDateTime.now()
@@ -375,6 +376,7 @@ class ChangeDayAction : ActionCallback {
     ) {
         val delta = parameters[DeltaKey] ?: 0
         val reset = parameters[ResetKey] ?: false
+        android.util.Log.d("ChangeDayAction", "onAction called: delta=$delta, reset=$reset, glanceId=$glanceId")
         updateAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId) { prefs ->
             val mutable = prefs.toMutablePreferences()
             if (reset) {
@@ -383,6 +385,7 @@ class ChangeDayAction : ActionCallback {
                 val current = prefs[TimetableGlanceWidget.DAY_OFFSET_KEY] ?: 0
                 mutable[TimetableGlanceWidget.DAY_OFFSET_KEY] = current + delta
             }
+            android.util.Log.d("ChangeDayAction", "new day_offset=${mutable[TimetableGlanceWidget.DAY_OFFSET_KEY]}")
             mutable
         }
         TimetableGlanceWidget().update(context, glanceId)

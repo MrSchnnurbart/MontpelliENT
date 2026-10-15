@@ -66,7 +66,7 @@ class CrousGlanceWidget : GlanceAppWidget() {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "CROUS FAVORITE",
+                            text = "FAVORITE RESTAURANT",
                             style = TextStyle(
                                 color = GlanceTheme.colors.primary,
                                 fontWeight = FontWeight.Bold,

@@ -7,4 +7,7 @@
     <string name="bu_empty">No libraries found</string>
     <string name="events_empty">No upcoming events</string>
     <string name="news_empty">No news available</string>
+    <string name="bu_open">Open</string>
+    <string name="bu_closed">Closed</string>
+    <string name="bu_occupancy">Occupancy: %d%%</string>
 </resources>

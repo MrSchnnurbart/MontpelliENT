@@ -3,4 +3,11 @@
     <string name="mail_title">UM Webmail</string>
     <string name="mail_empty">No messages</string>
     <string name="mail_unread">%d unread</string>
+    <string name="mail_load_more">Load 10 older emails</string>
+    <string name="mail_from">From: %1$s &lt;%2$s&gt;</string>
+    <string name="mail_loading_full">Loading full message…</string>
+    <string name="mail_attachments">Attachments (%d):</string>
+    <string name="mail_content_unavailable">Text content not available</string>
+    <string name="mail_downloading_attachment">Downloading attachment…</string>
+    <string name="mail_open_attachment">Open %s</string>
 </resources>

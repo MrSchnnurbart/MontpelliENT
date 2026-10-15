@@ -10,4 +10,7 @@
     <string name="home_no_courses">No upcoming classes today</string>
     <string name="home_no_assignments">No urgent assignments</string>
     <string name="home_see_all">See all</string>
+    <string name="home_search_placeholder">Search classes, assignments, emails, rooms…</string>
+    <string name="home_search_title">Global Search</string>
+    <string name="home_search_no_results">No results found</string>
 </resources>

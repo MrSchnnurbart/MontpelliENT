@@ -5,4 +5,9 @@
     <string name="grades_credits">%s ECTS</string>
     <string name="grades_session">Session: %s</string>
     <string name="grades_new">NEW</string>
+    <string name="grades_simulate">Simulator &amp; Compensation</string>
+    <string name="grades_simulation_title">Grade Average Simulation</string>
+    <string name="grades_simulated_avg">Simulated average: %s / 20</string>
+    <string name="grades_current_avg">Current average: %s / 20</string>
+    <string name="grades_close">Close</string>
 </resources>

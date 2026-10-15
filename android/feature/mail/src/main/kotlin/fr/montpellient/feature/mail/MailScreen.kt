@@ -198,7 +198,7 @@ fun MailRoute(container: AppContainer) {
                                         },
                                         shape = RoundedCornerShape(12.dp)
                                     ) {
-                                        Text("Charger 10 mails plus anciens")
+                                        Text(stringResource(R.string.mail_load_more))
                                     }
                                 }
                             }
@@ -247,12 +247,12 @@ fun MailRoute(container: AppContainer) {
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
-                    context.startActivity(Intent.createChooser(intent, "Ouvrir ${att.fileName}"))
+                    context.startActivity(Intent.createChooser(intent, context.getString(R.string.mail_open_attachment, att.fileName)))
                 } catch (e: Exception) {
                     Toast.makeText(context, "Erreur: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             } else {
-                Toast.makeText(context, "Téléchargement de la pièce jointe...", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.mail_downloading_attachment), Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -272,7 +272,7 @@ fun MailRoute(container: AppContainer) {
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "De : ${detailedMail.from.display} <${detailedMail.from.email}>",
+                        text = stringResource(R.string.mail_from, detailedMail.from.display, detailedMail.from.email),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.primary
@@ -294,7 +294,7 @@ fun MailRoute(container: AppContainer) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                         Spacer(Modifier.width(12.dp))
                         Text(
-                            "Chargement du message complet...",
+                            stringResource(R.string.mail_loading_full),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -304,7 +304,7 @@ fun MailRoute(container: AppContainer) {
                 // Pièces jointes
                 if (detailedMail.attachments.isNotEmpty()) {
                     Text(
-                        text = "Pièces jointes (${detailedMail.attachments.size}) :",
+                        text = stringResource(R.string.mail_attachments, detailedMail.attachments.size),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -384,7 +384,7 @@ fun MailRoute(container: AppContainer) {
                         .trim()
 
                     Text(
-                        text = if (cleanText.isNotBlank()) cleanText else "Contenu textuel non disponible",
+                        text = if (cleanText.isNotBlank()) cleanText else stringResource(R.string.mail_content_unavailable),
                         style = MaterialTheme.typography.bodyMedium,
                         lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.3
                     )

@@ -10,4 +10,11 @@
     <string name="status_not_submitted">Due</string>
     <string name="status_graded">Graded</string>
     <string name="due_date">Due: %s</string>
+    <string name="courses_open_moodle">Open in UM Moodle</string>
+    <string name="courses_resources_title">Course Resources &amp; Documents</string>
+    <string name="courses_no_files_title">No files available for this course</string>
+    <string name="courses_no_files_desc">No lecture slides or documents have been posted by the instructor for this course on Moodle.</string>
+    <string name="courses_download_pdf">Download / View PDF</string>
+    <string name="courses_open_resource">View resource</string>
+    <string name="courses_grade">Grade: %s</string>
 </resources>

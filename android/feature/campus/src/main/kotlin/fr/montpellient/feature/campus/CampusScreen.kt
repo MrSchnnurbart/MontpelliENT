@@ -111,7 +111,7 @@ private fun LibrariesList(libraries: List<Library>) {
                     ) {
                         Text(bu.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         StatusChip(
-                            text = if (bu.isOpenNow) "Ouvert" else "Fermé",
+                            text = stringResource(if (bu.isOpenNow) R.string.bu_open else R.string.bu_closed),
                             container = if (bu.isOpenNow) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
                             content = if (bu.isOpenNow) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -119,7 +119,7 @@ private fun LibrariesList(libraries: List<Library>) {
                     Text("${bu.campus} · ${bu.todayHours}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     bu.occupancyPercent?.let { occ ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Occupation : $occ%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(R.string.bu_occupancy, occ), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(8.dp))
                             LinearProgressIndicator(
                                 progress = { occ / 100f },

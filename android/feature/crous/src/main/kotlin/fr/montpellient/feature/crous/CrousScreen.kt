@@ -135,12 +135,6 @@ fun CrousRoute(container: AppContainer) {
                                             container = affColor,
                                             content = affOnColor
                                         )
-                                    } else {
-                                        StatusChip(
-                                            text = stringResource(R.string.crous_affluence_closed),
-                                            container = MaterialTheme.colorScheme.surfaceVariant,
-                                            content = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
                                     }
                                 }
                             }
@@ -164,10 +158,10 @@ fun CrousRoute(container: AppContainer) {
                 Text(r.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                 Text(r.address, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 HorizontalDivider()
-                Text("Menu du jour", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.crous_menu_today), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
                 if (menus.isEmpty()) {
-                    Text("Aucun menu publié", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.crous_no_menu), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 } else {
                     val todayMenu = menus.first()
                     todayMenu.meals.forEach { meal ->

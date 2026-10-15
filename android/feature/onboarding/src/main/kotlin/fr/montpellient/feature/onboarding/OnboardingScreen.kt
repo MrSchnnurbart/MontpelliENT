@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -125,7 +126,8 @@ fun InitialSyncScreen(
     container: AppContainer,
     onFinished: () -> Unit
 ) {
-    var syncStep by remember { mutableStateOf("Connexion aux serveurs UM établie...") }
+    val context = LocalContext.current
+    var syncStep by remember { mutableStateOf(context.getString(R.string.sync_step_connected)) }
     var progress by remember { mutableStateOf(0.15f) }
     var icalUrlInput by remember { mutableStateOf("") }
     var needManualIcal by remember { mutableStateOf(false) }
@@ -134,12 +136,12 @@ fun InitialSyncScreen(
 
     LaunchedEffect(Unit) {
         kotlinx.coroutines.delay(400)
-        syncStep = "Vérification de la session CAS & Profil..."
+        syncStep = context.getString(R.string.sync_step_cas)
         progress = 0.35f
         container.profile.reloadProfile()
         kotlinx.coroutines.delay(600)
 
-        syncStep = "Synchronisation de l'Emploi du temps ADE..."
+        syncStep = context.getString(R.string.sync_step_timetable)
         progress = 0.55f
         val icalSaved = container.timetable.getCustomIcalUrl()
         if (icalSaved.isNullOrBlank()) {
@@ -148,14 +150,14 @@ fun InitialSyncScreen(
             runCatching { container.timetable.refresh() }
         }
 
-        syncStep = "Interrogation de Moodle & Apogée..."
+        syncStep = context.getString(R.string.sync_step_services)
         progress = 0.85f
         runCatching { container.courses.refresh() }
         runCatching { container.grades.refresh() }
 
         if (icalSaved != null && icalSaved.isNotBlank()) {
             progress = 1.0f
-            syncStep = "Synchronisation terminée avec succès !"
+            syncStep = context.getString(R.string.sync_step_done)
             kotlinx.coroutines.delay(800)
             onFinished()
         }
@@ -180,7 +182,7 @@ fun InitialSyncScreen(
             Spacer(Modifier.height(16.dp))
 
             Text(
-                "Initialisation de vos données",
+                stringResource(R.string.sync_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
@@ -210,19 +212,19 @@ fun InitialSyncScreen(
                 ) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
-                            "Emploi du temps ADE Campus",
+                            stringResource(R.string.sync_ade_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            "Pour charger vos cours réels, renseignez le lien d'export iCal de votre agenda (trouvable sur l'ENT > ADE > Options > Exporter mon agenda). Vous pourrez aussi le renseigner plus tard.",
+                            stringResource(R.string.sync_ade_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         OutlinedTextField(
                             value = icalUrlInput,
                             onValueChange = { icalUrlInput = it },
-                            label = { Text("URL iCal ADE (.ics ou direct_cal)") },
+                            label = { Text(stringResource(R.string.sync_ade_label)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             enabled = !isSavingIcal
@@ -236,7 +238,7 @@ fun InitialSyncScreen(
                                 modifier = Modifier.weight(1f),
                                 enabled = !isSavingIcal
                             ) {
-                                Text("Passer")
+                                Text(stringResource(R.string.sync_ade_skip))
                             }
                             Button(
                                 onClick = {
@@ -254,7 +256,7 @@ fun InitialSyncScreen(
                                 modifier = Modifier.weight(1f),
                                 enabled = !isSavingIcal
                             ) {
-                                Text("Valider")
+                                Text(stringResource(R.string.sync_ade_confirm))
                             }
                         }
                     }

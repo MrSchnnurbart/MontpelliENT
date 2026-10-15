@@ -228,7 +228,7 @@ private fun AssignmentsList(assignments: List<Assignment>) {
 
                     assignment.grade?.let { grade ->
                         Text(
-                            "Note: $grade",
+                            stringResource(R.string.courses_grade, grade),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.secondary
@@ -318,13 +318,13 @@ private fun CourseDetailModal(
             ) {
                 Icon(Icons.Outlined.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Ouvrir dans Moodle UM")
+                Text(stringResource(R.string.courses_open_moodle))
             }
 
             HorizontalDivider()
 
             Text(
-                text = "Ressources & Documents du cours",
+                text = stringResource(R.string.courses_resources_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -339,12 +339,12 @@ private fun CourseDetailModal(
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            "Aucun fichier disponible pour ce cours",
+                            stringResource(R.string.courses_no_files_title),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            "Aucun document ni support de cours n'a été publié par l'enseignant pour cette matière sur Moodle.",
+                            stringResource(R.string.courses_no_files_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -411,7 +411,7 @@ private fun CourseDetailModal(
                                                     )
                                                 }
                                                 Text(
-                                                    text = if (mod.type == fr.montpellient.core.model.ModuleType.FILE) "Télécharger / Voir le PDF" else "Consulter la ressource",
+                                                    text = if (mod.type == fr.montpellient.core.model.ModuleType.FILE) stringResource(R.string.courses_download_pdf) else stringResource(R.string.courses_open_resource),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = MaterialTheme.colorScheme.primary
                                                 )

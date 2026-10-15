@@ -9,4 +9,6 @@
     <string name="crous_affluence_closed">Fermé (pas d\'attente)</string>
     <string name="crous_open">Ouvert</string>
     <string name="crous_closed">Fermé</string>
+    <string name="crous_menu_today">Menu du jour</string>
+    <string name="crous_no_menu">Aucun menu publié</string>
 </resources>

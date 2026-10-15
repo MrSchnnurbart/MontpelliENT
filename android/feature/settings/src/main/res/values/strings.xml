@@ -24,7 +24,14 @@
     <string name="notif_assignments_desc">Rappels avant les dates limites de remise</string>
     <string name="notif_test_button">Tester les notifications</string>
     <string name="notif_test_sent">Notification envoyée ! Vérifiez votre volet de notifications.</string>
+    <string name="notif_test_body">Vos notifications fonctionnent parfaitement ! 🎓</string>
     <string name="notif_permission_denied">Autorisation de notifications requise.</string>
+    <string name="settings_ade_title">Emploi du Temps ADE Campus</string>
+    <string name="settings_ade_desc">Lien d\'export iCal de votre agenda ADE (trouvable dans l\'ENT ou ADE &gt; Options &gt; Exporter mon agenda).</string>
+    <string name="settings_ade_label">URL iCal (.ics ou direct_cal)</string>
+    <string name="settings_ade_sync_success">Emploi du temps synchronisé avec succès !</string>
+    <string name="settings_ade_syncing">Synchronisation…</string>
+    <string name="settings_ade_save_sync">Enregistrer et synchroniser l\'EDT</string>
     <string name="session_section">Compte &amp; Session</string>
     <string name="session_disconnect">Se déconnecter</string>
     <string name="session_disconnect_demo">Quitter le mode démo</string>

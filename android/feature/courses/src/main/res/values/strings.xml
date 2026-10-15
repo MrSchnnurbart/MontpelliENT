@@ -10,4 +10,11 @@
     <string name="status_not_submitted">À rendre</string>
     <string name="status_graded">Noté</string>
     <string name="due_date">Échéance : %s</string>
+    <string name="courses_open_moodle">Ouvrir dans Moodle UM</string>
+    <string name="courses_resources_title">Ressources &amp; Documents du cours</string>
+    <string name="courses_no_files_title">Aucun fichier disponible pour ce cours</string>
+    <string name="courses_no_files_desc">Aucun document ni support de cours n\'a été publié par l\'enseignant pour cette matière sur Moodle.</string>
+    <string name="courses_download_pdf">Télécharger / Voir le PDF</string>
+    <string name="courses_open_resource">Consulter la ressource</string>
+    <string name="courses_grade">Note : %s</string>
 </resources>

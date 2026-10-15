@@ -49,7 +49,7 @@ fun SettingsRoute(container: AppContainer) {
                 channelId = NotificationHelper.CHANNEL_TEST,
                 notificationId = 1001,
                 title = "MontpelliENT",
-                message = "Vos notifications fonctionnent parfaitement ! 🎓"
+                message = context.getString(R.string.notif_test_body)
             )
             Toast.makeText(context, context.getString(R.string.notif_test_sent), Toast.LENGTH_SHORT).show()
         } else {
@@ -65,7 +65,7 @@ fun SettingsRoute(container: AppContainer) {
                     channelId = NotificationHelper.CHANNEL_TEST,
                     notificationId = 1001,
                     title = "MontpelliENT",
-                    message = "Vos notifications fonctionnent parfaitement ! 🎓"
+                    message = context.getString(R.string.notif_test_body)
                 )
                 Toast.makeText(context, context.getString(R.string.notif_test_sent), Toast.LENGTH_SHORT).show()
             } else {
@@ -77,7 +77,7 @@ fun SettingsRoute(container: AppContainer) {
                 channelId = NotificationHelper.CHANNEL_TEST,
                 notificationId = 1001,
                 title = "MontpelliENT",
-                message = "Vos notifications fonctionnent parfaitement ! 🎓"
+                message = context.getString(R.string.notif_test_body)
             )
             Toast.makeText(context, context.getString(R.string.notif_test_sent), Toast.LENGTH_SHORT).show()
         }
@@ -285,7 +285,7 @@ fun SettingsRoute(container: AppContainer) {
             }
 
             item {
-                SectionHeader("Emploi du Temps ADE Campus")
+                SectionHeader(stringResource(R.string.settings_ade_title))
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -294,6 +294,7 @@ fun SettingsRoute(container: AppContainer) {
                     var icalUrl by remember { mutableStateOf("") }
                     var isSaving by remember { mutableStateOf(false) }
                     var statusText by remember { mutableStateOf<String?>(null) }
+                    val successMsg = stringResource(R.string.settings_ade_sync_success)
 
                     LaunchedEffect(Unit) {
                         icalUrl = container.timetable.getCustomIcalUrl() ?: ""
@@ -301,14 +302,14 @@ fun SettingsRoute(container: AppContainer) {
 
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            "Lien d'export iCal de votre agenda ADE (trouvable dans l'ENT ou ADE > Options > Exporter mon agenda).",
+                            stringResource(R.string.settings_ade_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         OutlinedTextField(
                             value = icalUrl,
                             onValueChange = { icalUrl = it },
-                            label = { Text("URL iCal (.ics ou direct_cal)") },
+                            label = { Text(stringResource(R.string.settings_ade_label)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             enabled = !isSaving
@@ -324,7 +325,7 @@ fun SettingsRoute(container: AppContainer) {
                                     scope.launch {
                                         val res = container.timetable.setCustomIcalUrl(icalUrl.trim())
                                         isSaving = false
-                                        statusText = if (res.isSuccess) "Emploi du temps synchronisé avec succès !" else (res.exceptionOrNull()?.message ?: "Erreur")
+                                        statusText = if (res.isSuccess) successMsg else (res.exceptionOrNull()?.message ?: "Erreur")
                                     }
                                 }
                             },
@@ -332,7 +333,7 @@ fun SettingsRoute(container: AppContainer) {
                             shape = RoundedCornerShape(12.dp),
                             enabled = !isSaving && icalUrl.isNotBlank()
                         ) {
-                            Text(if (isSaving) "Synchronisation..." else "Enregistrer et synchroniser l'EDT")
+                            Text(if (isSaving) stringResource(R.string.settings_ade_syncing) else stringResource(R.string.settings_ade_save_sync))
                         }
                     }
                 }

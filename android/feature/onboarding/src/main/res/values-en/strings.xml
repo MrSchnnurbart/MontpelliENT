@@ -12,4 +12,15 @@
     <string name="login_btn_cancel">Cancel</string>
     <string name="login_connecting">Connecting securely…</string>
     <string name="login_security_note">Your credentials are encrypted with Android Keystore (AES-256) on your device and are never sent to third-party servers.</string>
+    <string name="sync_title">Initializing your data</string>
+    <string name="sync_step_connected">Connection to UM servers established…</string>
+    <string name="sync_step_cas">Verifying CAS session &amp; Profile…</string>
+    <string name="sync_step_timetable">Synchronizing ADE Timetable…</string>
+    <string name="sync_step_services">Querying Moodle &amp; Apogée…</string>
+    <string name="sync_step_done">Synchronization completed successfully!</string>
+    <string name="sync_ade_title">ADE Campus Timetable</string>
+    <string name="sync_ade_desc">To load your schedule, provide the iCal export link of your calendar (found on ENT &gt; ADE &gt; Options &gt; Export my calendar). You can also set this later.</string>
+    <string name="sync_ade_label">ADE iCal URL (.ics or direct_cal)</string>
+    <string name="sync_ade_skip">Skip</string>
+    <string name="sync_ade_confirm">Confirm</string>
 </resources>

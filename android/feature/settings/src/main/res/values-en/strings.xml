@@ -6,6 +6,9 @@
     <string name="theme_amoled">Pure AMOLED Black</string>
     <string name="theme_dynamic">Dynamic Colors (Material You)</string>
     <string name="theme_palette">Color Palette</string>
+    <string name="theme_custom_color">Custom Color</string>
+    <string name="theme_custom_hex">Hexadecimal code (e.g. #00467F, #E65100)</string>
+    <string name="theme_apply">Apply</string>
     <string name="nav_section">Navigation</string>
     <string name="nav_tabs_desc">Navigation Bar Tabs (max 4)</string>
     <string name="nav_tabs_max_reached">Maximum number of tabs reached (4/4). Uncheck one to select another.</string>
@@ -21,7 +24,14 @@
     <string name="notif_assignments_desc">Reminders before submission deadlines</string>
     <string name="notif_test_button">Test Notifications</string>
     <string name="notif_test_sent">Notification sent! Check your notification drawer.</string>
+    <string name="notif_test_body">Your notifications are working properly! 🎓</string>
     <string name="notif_permission_denied">Notification permission required.</string>
+    <string name="settings_ade_title">ADE Campus Timetable</string>
+    <string name="settings_ade_desc">iCal export link of your ADE calendar (from UM ENT or ADE &gt; Options &gt; Export my calendar).</string>
+    <string name="settings_ade_label">iCal URL (.ics or direct_cal)</string>
+    <string name="settings_ade_sync_success">Timetable synchronized successfully!</string>
+    <string name="settings_ade_syncing">Synchronizing…</string>
+    <string name="settings_ade_save_sync">Save and synchronize timetable</string>
     <string name="session_section">Account &amp; Session</string>
     <string name="session_disconnect">Sign Out</string>
     <string name="session_disconnect_demo">Exit Demo Mode</string>
