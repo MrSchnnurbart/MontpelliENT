@@ -11,5 +11,7 @@ local.properties
 .cxx
 *.keystore
 *.jks
+keystore/
+keystore.properties
 .env
 *.apk

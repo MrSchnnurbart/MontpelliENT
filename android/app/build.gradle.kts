@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.montpellient.android.application)
     alias(libs.plugins.kotlin.serialization)
@@ -17,6 +20,45 @@ android {
         localeFilters += listOf("fr", "en")
     }
 
+    signingConfigs {
+        create("release") {
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
+            val keystoreProperties = Properties()
+            if (keystorePropertiesFile.exists()) {
+                FileInputStream(keystorePropertiesFile).use { stream ->
+                    keystoreProperties.load(stream)
+                }
+            }
+
+            val storeFilePath = System.getenv("RELEASE_KEYSTORE_FILE")
+                ?: keystoreProperties.getProperty("storeFile")
+                ?: "keystore/release.jks"
+
+            val storePasswordProp: String? = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+                ?: keystoreProperties.getProperty("storePassword")
+
+            val keyAliasProp: String = System.getenv("RELEASE_KEY_ALIAS")
+                ?: keystoreProperties.getProperty("keyAlias")
+                ?: "montpellient"
+
+            val keyPasswordProp: String? = System.getenv("RELEASE_KEY_PASSWORD")
+                ?: keystoreProperties.getProperty("keyPassword")
+                ?: storePasswordProp
+
+            val resolvedKeystoreFile = rootProject.file(storeFilePath).takeIf { it.exists() }
+                ?: file(storeFilePath).takeIf { it.exists() }
+
+            if (resolvedKeystoreFile != null && !storePasswordProp.isNullOrBlank()) {
+                storeFile = resolvedKeystoreFile
+                storePassword = storePasswordProp
+                keyAlias = keyAliasProp
+                keyPassword = keyPasswordProp ?: storePasswordProp
+                enableV1Signing = true
+                enableV2Signing = true
+            }
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
@@ -25,8 +67,12 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Permet d'installer directement l'APK release en le signant par défaut avec le keystore local
-            signingConfig = signingConfigs.getByName("debug")
+            val releaseSigning = signingConfigs.findByName("release")
+            if (releaseSigning?.storeFile != null && releaseSigning.storeFile!!.exists()) {
+                signingConfig = releaseSigning
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 }
@@ -35,7 +81,7 @@ tasks.register<Copy>("copyReleaseApk") {
     dependsOn("assembleRelease")
     from(layout.buildDirectory.dir("outputs/apk/release")) {
         include("*.apk")
-        rename { "MontpelliENT-v1.0.0-release.apk" }
+        rename { "MontpelliENT-v${android.defaultConfig.versionName}-release.apk" }
     }
     into(rootProject.file("dist"))
 }
@@ -44,7 +90,7 @@ tasks.register<Copy>("copyDebugApk") {
     dependsOn("assembleDebug")
     from(layout.buildDirectory.dir("outputs/apk/debug")) {
         include("*.apk")
-        rename { "MontpelliENT-v1.0.0-debug.apk" }
+        rename { "MontpelliENT-v${android.defaultConfig.versionName}-debug.apk" }
     }
     into(rootProject.file("dist"))
 }
